@@ -58,7 +58,22 @@ func (h *InvoiceHandler) Create(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, inv)
 }
 
-// POST /invoices/{id}/pay
+// GET /api/invoices/summary
+func (h *InvoiceHandler) Summary(w http.ResponseWriter, r *http.Request) {
+	summary, err := h.svc.GetSummary(r.Context(), time.Now())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get summary")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"paid_count":    summary.PaidCount,
+		"unpaid_count":  summary.UnpaidCount,
+		"overdue_count": summary.OverdueCount,
+		"total_amount":  summary.TotalAmount,
+	})
+}
+
+// POST /api/invoices/{id}/pay
 func (h *InvoiceHandler) Pay(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {

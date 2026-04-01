@@ -17,6 +17,21 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+func cors(origin string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func main() {
 	repo := memory.NewInvoiceRepo()
 	svc := services.NewInvoiceService(repo)
@@ -25,10 +40,14 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(cors("http://localhost:5173"))
 
-	r.Get("/invoices", handler.List)
-	r.Post("/invoices", handler.Create)
-	r.Post("/invoices/{id}/pay", handler.Pay)
+	r.Route("/api/invoices", func(r chi.Router) {
+		r.Get("/", handler.List)
+		r.Post("/", handler.Create)
+		r.Get("/summary", handler.Summary)
+		r.Post("/{id}/pay", handler.Pay)
+	})
 
 	srv := &http.Server{
 		Addr:    ":8080",
