@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"backend/internal/apperrors"
-	"backend/internal/repositories/postgres"
+	"backend/internal/repositories/memory"
 	"backend/internal/services"
 
 	"github.com/google/uuid"
@@ -19,7 +19,7 @@ var (
 )
 
 func newService() *services.InvoiceService {
-	return services.NewInvoiceService(postgres.NewInvoiceRepo())
+	return services.NewInvoiceService(memory.NewInvoiceRepo())
 }
 
 func TestCreateInvoice(t *testing.T) {

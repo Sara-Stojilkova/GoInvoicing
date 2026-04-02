@@ -41,12 +41,9 @@ func (s *InvoiceService) MarkAsPaid(ctx context.Context, id uuid.UUID) error {
 	if err != nil {
 		return fmt.Errorf("invoice %s: %w", id, apperrors.ErrNotFound)
 	}
-	if inv.IsPaid() {
-		return fmt.Errorf("invoice %s: %w", id, apperrors.ErrConflict)
+	if err := inv.MarkAsPaid(time.Now()); err != nil {
+		return err
 	}
-	now := time.Now()
-	inv.PaidAt = &now
-	inv.Status = "paid"
 	return s.repo.Update(ctx, inv)
 }
 
