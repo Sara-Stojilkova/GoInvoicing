@@ -50,6 +50,10 @@ func (s *InvoiceService) MarkAsPaid(ctx context.Context, id uuid.UUID) error {
 	return s.repo.Update(ctx, inv)
 }
 
+func (s *InvoiceService) List(ctx context.Context) ([]*domain.Invoice, error) {
+	return s.repo.List(ctx)
+}
+
 func (s *InvoiceService) ListOverdue(ctx context.Context, now time.Time) ([]*domain.Invoice, error) {
 	all, err := s.repo.List(ctx)
 	if err != nil {

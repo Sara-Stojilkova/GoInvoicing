@@ -2,4 +2,7 @@ module backend
 
 go 1.18
 
-require github.com/google/uuid v1.6.0 // indirect
+require (
+	github.com/go-chi/chi/v5 v5.0.12 // indirect
+	github.com/google/uuid v1.6.0 // indirect
+)
