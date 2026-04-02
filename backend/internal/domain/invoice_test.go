@@ -38,6 +38,37 @@ func TestIsOverdue(t *testing.T) {
 	}
 }
 
+func TestDaysUntilDue(t *testing.T) {
+	now := time.Date(2026, 3, 31, 12, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name    string
+		invoice Invoice
+		want    int
+	}{
+		{"due in 2 days",  Invoice{DueDate: now.Add(48 * time.Hour)}, 2},
+		{"due in 1 day",   Invoice{DueDate: now.Add(24 * time.Hour)}, 1},
+		{"due today",      Invoice{DueDate: now}, 0},
+		{"overdue 1 day",  Invoice{DueDate: now.Add(-24 * time.Hour)}, -1},
+		{"overdue 7 days", Invoice{DueDate: now.Add(-7 * 24 * time.Hour)}, -7},
+		{"due in 26 hours (round down)", Invoice{DueDate: now.Add(26 * time.Hour)}, 1},
+		{"due in 25 hours (still 1 day)", Invoice{DueDate: now.Add(25 * time.Hour)}, 1},
+		{"due in 23 hours (less than a day)", Invoice{DueDate: now.Add(23 * time.Hour)}, 0},
+		{"overdue 26 hours (round up toward zero)", Invoice{DueDate: now.Add(-26 * time.Hour)}, -1},
+		{"overdue 25 hours (still -1 day)", Invoice{DueDate: now.Add(-25 * time.Hour)}, -1},
+		{"overdue 23 hours (less than a day)", Invoice{DueDate: now.Add(-23 * time.Hour)}, 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.invoice.DaysUntilDue(now)
+			if got != tt.want {
+				t.Errorf("DaysUntilDue() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestMarkAsPaid(t *testing.T) {
 	now := time.Date(2026, 3, 31, 12, 0, 0, 0, time.UTC)
 
