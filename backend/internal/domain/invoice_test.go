@@ -69,6 +69,33 @@ func TestDaysUntilDue(t *testing.T) {
 	}
 }
 
+func TestCalculateLateFee(t *testing.T) {
+	tests := []struct {
+		name     string
+		amount   float64
+		daysLate int
+		rate     float64
+		want     float64
+	}{
+		{"zero days late",     100, 0,   0.05, 0},
+		{"negative days late", 100, -1,  0.05, 0},
+		{"1 day at 5%",        100, 1,   0.05, 5.00},
+		{"2 days at 5%",       100, 2,   0.05, 10.25},
+		{"30 days at 1%",      100, 30,  0.01, 34.78},
+		{"1 day at 10%",       1000, 1,  0.10, 100.00},
+		{"zero amount",        0,   10,  0.05, 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := CalculateLateFee(tt.amount, tt.daysLate, tt.rate)
+			if got != tt.want {
+				t.Errorf("CalculateLateFee(%v, %v, %v) = %v, want %v", tt.amount, tt.daysLate, tt.rate, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestMarkAsPaid(t *testing.T) {
 	now := time.Date(2026, 3, 31, 12, 0, 0, 0, time.UTC)
 
