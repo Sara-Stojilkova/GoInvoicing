@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"backend/internal/apperrors"
-	"backend/internal/domain"
+	domain "backend/internal/domain/user"
 	"backend/internal/repositories"
 
 	"github.com/google/uuid"

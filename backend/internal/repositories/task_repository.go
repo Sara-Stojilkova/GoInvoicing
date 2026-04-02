@@ -3,7 +3,7 @@ package repositories
 import (
 	"context"
 
-	"backend/internal/domain"
+	domain "backend/internal/domain/task"
 
 	"github.com/google/uuid"
 )

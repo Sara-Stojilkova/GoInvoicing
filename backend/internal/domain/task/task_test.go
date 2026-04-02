@@ -18,8 +18,8 @@ func TestIsAssigned(t *testing.T) {
 		task Task
 		want bool
 	}{
-		{"unassigned task", Task{ID: uuid.New(), AssigneeID: nil},     false},
-		{"assigned task",   Task{ID: uuid.New(), AssigneeID: &userID}, true},
+		{"unassigned task", Task{ID: uuid.New(), AssigneeID: nil}, false},
+		{"assigned task", Task{ID: uuid.New(), AssigneeID: &userID}, true},
 	}
 
 	for _, tt := range tests {
@@ -40,8 +40,8 @@ func TestIsComplete(t *testing.T) {
 		task Task
 		want bool
 	}{
-		{"incomplete task", Task{ID: uuid.New(), CompletedAt: nil},          false},
-		{"complete task",   Task{ID: uuid.New(), CompletedAt: timePtr(now)}, true},
+		{"incomplete task", Task{ID: uuid.New(), CompletedAt: nil}, false},
+		{"complete task", Task{ID: uuid.New(), CompletedAt: timePtr(now)}, true},
 	}
 
 	for _, tt := range tests {
@@ -64,12 +64,12 @@ func TestTaskIsOverdue(t *testing.T) {
 		task Task
 		want bool
 	}{
-		{"no due date",                    Task{ID: uuid.New(), DueDate: nil},                                                              false},
-		{"future due date",                Task{ID: uuid.New(), DueDate: timePtr(future)},                                                  false},
-		{"past due date, incomplete",      Task{ID: uuid.New(), DueDate: timePtr(past)},                                                    true},
-		{"past due date, complete",        Task{ID: uuid.New(), DueDate: timePtr(past), CompletedAt: timePtr(now.Add(-24 * time.Hour))},    false},
-		{"due exactly now",                Task{ID: uuid.New(), DueDate: timePtr(now)},                                                     false},
-		{"due one second ago",             Task{ID: uuid.New(), DueDate: timePtr(now.Add(-time.Second))},                                   true},
+		{"no due date", Task{ID: uuid.New(), DueDate: nil}, false},
+		{"future due date", Task{ID: uuid.New(), DueDate: timePtr(future)}, false},
+		{"past due date, incomplete", Task{ID: uuid.New(), DueDate: timePtr(past)}, true},
+		{"past due date, complete", Task{ID: uuid.New(), DueDate: timePtr(past), CompletedAt: timePtr(now.Add(-24 * time.Hour))}, false},
+		{"due exactly now", Task{ID: uuid.New(), DueDate: timePtr(now)}, false},
+		{"due one second ago", Task{ID: uuid.New(), DueDate: timePtr(now.Add(-time.Second))}, true},
 	}
 
 	for _, tt := range tests {
@@ -92,8 +92,8 @@ func TestAssign(t *testing.T) {
 		assigneeID uuid.UUID
 		wantID     uuid.UUID
 	}{
-		{"assign to unassigned task",    Task{ID: uuid.New()},                          userA, userA},
-		{"reassign to different user",   Task{ID: uuid.New(), AssigneeID: &userA},      userB, userB},
+		{"assign to unassigned task", Task{ID: uuid.New()}, userA, userA},
+		{"reassign to different user", Task{ID: uuid.New(), AssigneeID: &userA}, userB, userB},
 	}
 
 	for _, tt := range tests {
@@ -118,9 +118,9 @@ func TestComplete(t *testing.T) {
 		task    Task
 		wantErr error
 	}{
-		{"todo task",        Task{ID: uuid.New(), Status: "todo"},                                                           nil},
-		{"in_progress task", Task{ID: uuid.New(), Status: "in_progress"},                                                    nil},
-		{"already done",     Task{ID: uuid.New(), Status: "done", CompletedAt: timePtr(now.Add(-time.Hour))}, apperrors.ErrConflict},
+		{"todo task", Task{ID: uuid.New(), Status: "todo"}, nil},
+		{"in_progress task", Task{ID: uuid.New(), Status: "in_progress"}, nil},
+		{"already done", Task{ID: uuid.New(), Status: "done", CompletedAt: timePtr(now.Add(-time.Hour))}, apperrors.ErrConflict},
 	}
 
 	for _, tt := range tests {
@@ -162,10 +162,10 @@ func TestFilterByStatus(t *testing.T) {
 		status string
 		want   int
 	}{
-		{"filter todo",        "todo",        2},
+		{"filter todo", "todo", 2},
 		{"filter in_progress", "in_progress", 1},
-		{"filter done",        "done",        1},
-		{"filter nonexistent", "cancelled",   0},
+		{"filter done", "done", 1},
+		{"filter nonexistent", "cancelled", 0},
 	}
 
 	for _, tt := range tests {
@@ -193,9 +193,9 @@ func TestFilterByAssignee(t *testing.T) {
 		assigneeID uuid.UUID
 		want       int
 	}{
-		{"filter by userA",        userA,        2},
-		{"filter by userB",        userB,        1},
-		{"filter by unknown user", uuid.New(),   0},
+		{"filter by userA", userA, 2},
+		{"filter by userB", userB, 1},
+		{"filter by unknown user", uuid.New(), 0},
 	}
 
 	for _, tt := range tests {
@@ -221,9 +221,9 @@ func TestFilterByPriority(t *testing.T) {
 		priority string
 		want     int
 	}{
-		{"filter high",        "high",     2},
-		{"filter medium",      "medium",   1},
-		{"filter low",         "low",      1},
+		{"filter high", "high", 2},
+		{"filter medium", "medium", 1},
+		{"filter low", "low", 1},
 		{"filter nonexistent", "critical", 0},
 	}
 
@@ -236,3 +236,5 @@ func TestFilterByPriority(t *testing.T) {
 		})
 	}
 }
+
+func timePtr(t time.Time) *time.Time { return &t }
