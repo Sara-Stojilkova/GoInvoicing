@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   fetchInvoices,
+  fetchSummary,
   createInvoice,
   markInvoicePaid,
   type CreateInvoiceInput,
@@ -10,6 +11,14 @@ export function useInvoices() {
   return useQuery({
     queryKey: ['invoices'],
     queryFn: fetchInvoices,
+    staleTime: 30_000,
+  })
+}
+
+export function useSummary() {
+  return useQuery({
+    queryKey: ['invoices', 'summary'],
+    queryFn: fetchSummary,
     staleTime: 30_000,
   })
 }

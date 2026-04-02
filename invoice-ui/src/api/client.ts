@@ -21,6 +21,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     try { message = JSON.parse(body).error } catch {}
     throw new ApiError(res.status, message)
   }
+  if (res.status === 204) return undefined as T
   return res.json()
 }
 
@@ -42,14 +43,25 @@ export interface CreateInvoiceInput {
   due_date: string
 }
 
+export interface Summary {
+  paid_count: number
+  unpaid_count: number
+  overdue_count: number
+  total_amount: number
+}
+
 export function fetchInvoices(): Promise<Invoice[]> {
-  return request<Invoice[]>('/invoices')
+  return request<Invoice[]>('/api/invoices/')
 }
 
 export function createInvoice(input: CreateInvoiceInput): Promise<Invoice> {
-  return request<Invoice>('/invoices', { method: 'POST', body: JSON.stringify(input) })
+  return request<Invoice>('/api/invoices/', { method: 'POST', body: JSON.stringify(input) })
 }
 
 export function markInvoicePaid(id: string): Promise<void> {
-  return request<void>(`/invoices/${id}/pay`, { method: 'POST' })
+  return request<void>(`/api/invoices/${id}/pay`, { method: 'POST' })
+}
+
+export function fetchSummary(): Promise<Summary> {
+  return request<Summary>('/api/invoices/summary')
 }

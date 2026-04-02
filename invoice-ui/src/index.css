@@ -95,6 +95,118 @@ p {
   margin: 0;
 }
 
+/* ── Summary cards ─────────────────────────────────────── */
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--code-bg);
+  cursor: pointer;
+  text-align: left;
+  transition: box-shadow 0.15s, border-color 0.15s;
+
+  &:hover:not(:disabled) {
+    box-shadow: var(--shadow);
+  }
+  &:disabled {
+    cursor: default;
+  }
+  &--active {
+    border-color: currentColor;
+    box-shadow: var(--shadow);
+  }
+}
+
+.summary-card__value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+  color: currentColor;
+}
+
+.summary-card__label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  color: currentColor;
+}
+
+.card-green { color: #16a34a; }
+.card-red   { color: #dc2626; }
+.card-amber { color: #d97706; }
+.card-gray  { color: var(--text); }
+
+@media (prefers-color-scheme: dark) {
+  .card-green { color: #4ade80; }
+  .card-red   { color: #f87171; }
+  .card-amber { color: #fbbf24; }
+}
+
+/* ── Create invoice form ───────────────────────────────── */
+
+.create-form {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--code-bg);
+  margin-bottom: 24px;
+
+  @media (max-width: 800px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.create-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.create-form label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.create-form input {
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  font-family: var(--sans);
+  outline: none;
+
+  &:focus {
+    border-color: var(--accent);
+  }
+}
+
 /* ── Invoice table ─────────────────────────────────────── */
 
 .page {
