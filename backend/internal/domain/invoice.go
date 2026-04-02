@@ -1,7 +1,10 @@
 package domain
 
 import (
+	"fmt"
 	"time"
+
+	"backend/internal/apperrors"
 
 	"github.com/google/uuid"
 )
@@ -27,4 +30,13 @@ func (i Invoice) IsOverdue(now time.Time) bool {
 
 func (i Invoice) DaysUntilDue(now time.Time) int {
 	return int(i.DueDate.Sub(now).Hours() / 24)
+}
+
+func (i *Invoice) MarkAsPaid(now time.Time) error {
+	if i.IsPaid() {
+		return fmt.Errorf("invoice %s: %w", i.ID, apperrors.ErrConflict)
+	}
+	i.PaidAt = &now
+	i.Status = "paid"
+	return nil
 }
