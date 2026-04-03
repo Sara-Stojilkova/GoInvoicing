@@ -237,4 +237,82 @@ func TestFilterByPriority(t *testing.T) {
 	}
 }
 
+func TestCanBeAssignedTo(t *testing.T) {
+	agencyA := uuid.New()
+	agencyB := uuid.New()
+
+	tests := []struct {
+		name             string
+		task             Task
+		assigneeAgencyID uuid.UUID
+		want             bool
+	}{
+		{"same agency", Task{ID: uuid.New(), AgencyID: agencyA}, agencyA, true},
+		{"different agency", Task{ID: uuid.New(), AgencyID: agencyA}, agencyB, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.task.CanBeAssignedTo(tt.assigneeAgencyID)
+			if got != tt.want {
+				t.Errorf("CanBeAssignedTo() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsAccessibleBy(t *testing.T) {
+	agencyA := uuid.New()
+	agencyB := uuid.New()
+
+	tests := []struct {
+		name         string
+		task         Task
+		userAgencyID uuid.UUID
+		want         bool
+	}{
+		{"user in same agency", Task{ID: uuid.New(), AgencyID: agencyA}, agencyA, true},
+		{"user in different agency", Task{ID: uuid.New(), AgencyID: agencyA}, agencyB, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.task.IsAccessibleBy(tt.userAgencyID)
+			if got != tt.want {
+				t.Errorf("IsAccessibleBy() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFilterByAgency(t *testing.T) {
+	agencyA := uuid.New()
+	agencyB := uuid.New()
+	tasks := []Task{
+		{ID: uuid.New(), AgencyID: agencyA},
+		{ID: uuid.New(), AgencyID: agencyB},
+		{ID: uuid.New(), AgencyID: agencyA},
+		{ID: uuid.New(), AgencyID: agencyA},
+	}
+
+	tests := []struct {
+		name     string
+		agencyID uuid.UUID
+		want     int
+	}{
+		{"filter agencyA", agencyA, 3},
+		{"filter agencyB", agencyB, 1},
+		{"filter unknown agency", uuid.New(), 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := FilterByAgency(tasks, tt.agencyID)
+			if len(got) != tt.want {
+				t.Errorf("FilterByAgency() returned %d tasks, want %d", len(got), tt.want)
+			}
+		})
+	}
+}
+
 func timePtr(t time.Time) *time.Time { return &t }
