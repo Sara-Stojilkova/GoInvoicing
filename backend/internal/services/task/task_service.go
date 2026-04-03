@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"backend/internal/apperrors"
 	domain "backend/internal/domain/task"
 	"backend/internal/repositories"
 
@@ -19,29 +21,87 @@ func NewTaskService(repo repositories.TaskRepository) *TaskService {
 }
 
 func (s *TaskService) Create(ctx context.Context, title, priority string, agencyID uuid.UUID) (*domain.Task, error) {
-	panic("not implemented")
+	task := &domain.Task{
+		ID:        uuid.New(),
+		Title:     title,
+		Priority:  priority,
+		AgencyID:  agencyID,
+		Status:    "todo",
+		CreatedAt: time.Now(),
+	}
+	if err := s.repo.Create(ctx, task); err != nil {
+		return nil, err
+	}
+	return task, nil
 }
 
 func (s *TaskService) AssignTask(ctx context.Context, taskID, assigneeID, assigneeAgencyID uuid.UUID) error {
-	panic("not implemented")
+	task, err := s.repo.GetByID(ctx, taskID)
+	if err != nil {
+		return err
+	}
+	if !task.CanBeAssignedTo(assigneeAgencyID) {
+		return fmt.Errorf("task %s: %w", taskID, apperrors.ErrForbidden)
+	}
+	task.Assign(assigneeID)
+	return s.repo.Update(ctx, task)
 }
 
 func (s *TaskService) CompleteTask(ctx context.Context, taskID uuid.UUID, now time.Time) error {
-	panic("not implemented")
+	task, err := s.repo.GetByID(ctx, taskID)
+	if err != nil {
+		return err
+	}
+	if err := task.Complete(now); err != nil {
+		return err
+	}
+	return s.repo.Update(ctx, task)
 }
 
 func (s *TaskService) GetTask(ctx context.Context, taskID uuid.UUID, requesterAgencyID uuid.UUID) (*domain.Task, error) {
-	panic("not implemented")
+	task, err := s.repo.GetByID(ctx, taskID)
+	if err != nil {
+		return nil, err
+	}
+	if !task.IsAccessibleBy(requesterAgencyID) {
+		return nil, fmt.Errorf("task %s: %w", taskID, apperrors.ErrForbidden)
+	}
+	return task, nil
 }
 
 func (s *TaskService) ListByAgency(ctx context.Context, agencyID uuid.UUID) ([]*domain.Task, error) {
-	panic("not implemented")
+	all, err := s.repo.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var result []*domain.Task
+	for _, t := range all {
+		if t.AgencyID == agencyID {
+			result = append(result, t)
+		}
+	}
+	return result, nil
 }
 
 func (s *TaskService) ListOverdue(ctx context.Context, agencyID uuid.UUID, now time.Time) ([]*domain.Task, error) {
-	panic("not implemented")
+	all, err := s.repo.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var result []*domain.Task
+	for _, t := range all {
+		if t.AgencyID == agencyID && t.IsOverdue(now) {
+			result = append(result, t)
+		}
+	}
+	return result, nil
 }
 
 func (s *TaskService) SetDueDate(ctx context.Context, taskID uuid.UUID, dueDate time.Time) error {
-	panic("not implemented")
+	task, err := s.repo.GetByID(ctx, taskID)
+	if err != nil {
+		return err
+	}
+	task.DueDate = &dueDate
+	return s.repo.Update(ctx, task)
 }
