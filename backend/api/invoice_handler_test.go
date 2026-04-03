@@ -11,7 +11,7 @@ import (
 
 	domain "backend/internal/domain/invoice"
 	"backend/internal/repositories/memory"
-	"backend/internal/services"
+	services "backend/internal/services/invoice"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"

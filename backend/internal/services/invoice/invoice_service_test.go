@@ -8,7 +8,7 @@ import (
 
 	"backend/internal/apperrors"
 	"backend/internal/repositories/memory"
-	"backend/internal/services"
+	services "backend/internal/services/invoice"
 
 	"github.com/google/uuid"
 )
@@ -163,9 +163,9 @@ func TestGetSummary(t *testing.T) {
 			wantPaid: 1, wantOverdue: 1, wantUnpaid: 2, wantTotal: 600.00,
 		},
 		{
-			name:      "empty repo",
-			setup:     func(svc *services.InvoiceService) {},
-			wantPaid:  0, wantOverdue: 0, wantUnpaid: 0, wantTotal: 0,
+			name:     "empty repo",
+			setup:    func(svc *services.InvoiceService) {},
+			wantPaid: 0, wantOverdue: 0, wantUnpaid: 0, wantTotal: 0,
 		},
 	}
 
