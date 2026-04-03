@@ -339,7 +339,7 @@ func TestListOverdue(t *testing.T) {
 	}
 }
 
-func TestStartProgress(t *testing.T) {
+func TestSetInProgress(t *testing.T) {
 	agencyID := uuid.New()
 
 	tests := []struct {
@@ -396,17 +396,17 @@ func TestStartProgress(t *testing.T) {
 			taskID := tt.setup(svc)
 			err := svc.SetInProgress(ctx, taskID)
 			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("StartProgress() error = %v, want %v", err, tt.wantErr)
+				t.Errorf("SetInProgress() error = %v, want %v", err, tt.wantErr)
 			}
 			if tt.wantErr == apperrors.ErrNotFound {
 				return
 			}
 			task, _ := svc.GetTask(ctx, taskID, agencyID)
 			if task.Status != tt.wantStatus {
-				t.Errorf("StartProgress() Status = %q, want %q", task.Status, tt.wantStatus)
+				t.Errorf("SetInProgress() Status = %q, want %q", task.Status, tt.wantStatus)
 			}
 			if tt.wantErr == nil && task.CompletedAt != nil {
-				t.Errorf("StartProgress() CompletedAt = %v, want nil", task.CompletedAt)
+				t.Errorf("SetInProgress() CompletedAt = %v, want nil", task.CompletedAt)
 			}
 		})
 	}

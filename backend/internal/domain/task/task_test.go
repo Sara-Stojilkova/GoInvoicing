@@ -170,16 +170,16 @@ func TestSetInProgress(t *testing.T) {
 			err := task.SetInProgress()
 			if tt.wantErr != nil {
 				if !errors.Is(err, tt.wantErr) {
-					t.Errorf("StartProgress() error = %v, want %v", err, tt.wantErr)
+					t.Errorf("SetInProgress() error = %v, want %v", err, tt.wantErr)
 				}
 			} else if err != nil {
-				t.Fatalf("StartProgress() unexpected error: %v", err)
+				t.Fatalf("SetInProgress() unexpected error: %v", err)
 			}
 			if task.Status != tt.wantStatus {
-				t.Errorf("StartProgress() Status = %q, want %q", task.Status, tt.wantStatus)
+				t.Errorf("SetInProgress() Status = %q, want %q", task.Status, tt.wantStatus)
 			}
 			if tt.wantCompletedAtNil && task.CompletedAt != nil {
-				t.Errorf("StartProgress() CompletedAt = %v, want nil", task.CompletedAt)
+				t.Errorf("SetInProgress() CompletedAt = %v, want nil", task.CompletedAt)
 			}
 		})
 	}
