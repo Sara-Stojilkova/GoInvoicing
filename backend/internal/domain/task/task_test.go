@@ -149,6 +149,72 @@ func TestComplete(t *testing.T) {
 	}
 }
 
+func TestStartProgress(t *testing.T) {
+	tests := []struct {
+		name       string
+		task       Task
+		wantStatus string
+		wantErr    error
+	}{
+		{"todo task transitions to in_progress", Task{ID: uuid.New(), Status: "todo"}, "in_progress", nil},
+		{"already in progress stays unchanged",  Task{ID: uuid.New(), Status: "in_progress"}, "in_progress", apperrors.ErrConflict},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			task := tt.task
+			err := task.StartProgress()
+			if tt.wantErr != nil {
+				if !errors.Is(err, tt.wantErr) {
+					t.Errorf("StartProgress() error = %v, want %v", err, tt.wantErr)
+				}
+			} else if err != nil {
+				t.Fatalf("StartProgress() unexpected error: %v", err)
+			}
+			if task.Status != tt.wantStatus {
+				t.Errorf("StartProgress() Status = %q, want %q", task.Status, tt.wantStatus)
+			}
+		})
+	}
+}
+
+func TestReopen(t *testing.T) {
+	now := time.Date(2026, 4, 3, 12, 0, 0, 0, time.UTC)
+	completedAt := timePtr(now.Add(-time.Hour))
+
+	tests := []struct {
+		name              string
+		task              Task
+		wantStatus        string
+		wantCompletedAt   *time.Time
+		wantErr           error
+	}{
+		{"done task transitions to in_progress",  Task{ID: uuid.New(), Status: "done", CompletedAt: completedAt}, "in_progress", nil,          nil},
+		{"todo task stays unchanged",             Task{ID: uuid.New(), Status: "todo"},                           "todo",        nil,          apperrors.ErrConflict},
+		{"in_progress task stays unchanged",      Task{ID: uuid.New(), Status: "in_progress"},                   "in_progress", nil,          apperrors.ErrConflict},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			task := tt.task
+			err := task.Reopen()
+			if tt.wantErr != nil {
+				if !errors.Is(err, tt.wantErr) {
+					t.Errorf("Reopen() error = %v, want %v", err, tt.wantErr)
+				}
+			} else if err != nil {
+				t.Fatalf("Reopen() unexpected error: %v", err)
+			}
+			if task.Status != tt.wantStatus {
+				t.Errorf("Reopen() Status = %q, want %q", task.Status, tt.wantStatus)
+			}
+			if task.CompletedAt != tt.wantCompletedAt {
+				t.Errorf("Reopen() CompletedAt = %v, want %v", task.CompletedAt, tt.wantCompletedAt)
+			}
+		})
+	}
+}
+
 func TestFilterByStatus(t *testing.T) {
 	tasks := []Task{
 		{ID: uuid.New(), Status: "todo"},

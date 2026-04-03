@@ -51,6 +51,14 @@ func (t *Task) Assign(userID uuid.UUID) {
 	t.AssigneeID = &userID
 }
 
+func (t *Task) StartProgress() error {
+	panic("not implemented")
+}
+
+func (t *Task) Reopen() error {
+	panic("not implemented")
+}
+
 func (t *Task) Complete(now time.Time) error {
 	if t.IsComplete() {
 		return fmt.Errorf("task %s: %w", t.ID, apperrors.ErrConflict)
