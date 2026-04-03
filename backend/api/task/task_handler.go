@@ -160,6 +160,11 @@ func (h *TaskHandler) Complete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// POST /tasks/{id}/set-in-progress
+func (h *TaskHandler) SetInProgress(w http.ResponseWriter, r *http.Request) {
+	panic("not implemented")
+}
+
 func parseUUIDParam(r *http.Request, key string) (uuid.UUID, error) {
 	val := r.URL.Query().Get(key)
 	if val == "" {

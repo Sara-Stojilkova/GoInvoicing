@@ -388,3 +388,68 @@ func TestTaskHandlerComplete(t *testing.T) {
 		})
 	}
 }
+
+// --- SetInProgress ---
+
+func TestTaskHandlerSetInProgress(t *testing.T) {
+	agencyA := uuid.New()
+
+	tests := []struct {
+		name       string
+		idStr      func(*services.TaskService) string
+		wantStatus int
+	}{
+		{
+			name:       "invalid task uuid",
+			idStr:      func(*services.TaskService) string { return "not-a-uuid" },
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "task not found",
+			idStr:      func(*services.TaskService) string { return uuid.New().String() },
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name: "already in_progress",
+			idStr: func(svc *services.TaskService) string {
+				task := mustCreateTask(t, svc, agencyA)
+				_ = svc.SetInProgress(context.Background(), task.ID)
+				return task.ID.String()
+			},
+			wantStatus: http.StatusConflict,
+		},
+		{
+			name: "success from todo",
+			idStr: func(svc *services.TaskService) string {
+				return mustCreateTask(t, svc, agencyA).ID.String()
+			},
+			wantStatus: http.StatusNoContent,
+		},
+		{
+			name: "success from done",
+			idStr: func(svc *services.TaskService) string {
+				task := mustCreateTask(t, svc, agencyA)
+				_ = svc.CompleteTask(context.Background(), task.ID, time.Now())
+				return task.ID.String()
+			},
+			wantStatus: http.StatusNoContent,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := newTaskService()
+			idStr := tt.idStr(svc)
+			h := NewTaskHandler(svc)
+
+			r := httptest.NewRequest(http.MethodPost, "/api/tasks/"+idStr+"/set-in-progress", nil)
+			r = withChiParam(r, "id", idStr)
+			w := httptest.NewRecorder()
+			h.SetInProgress(w, r)
+
+			if w.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d (body: %s)", w.Code, tt.wantStatus, w.Body.String())
+			}
+		})
+	}
+}
