@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"backend/api"
+	api "backend/api/invoice"
 	"backend/internal/repositories/memory"
 	services "backend/internal/services/invoice"
 

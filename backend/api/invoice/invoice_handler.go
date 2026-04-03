@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"backend/api"
 	"backend/internal/apperrors"
 	services "backend/internal/services/invoice"
 
@@ -25,10 +26,10 @@ func NewInvoiceHandler(svc *services.InvoiceService) *InvoiceHandler {
 func (h *InvoiceHandler) List(w http.ResponseWriter, r *http.Request) {
 	invoices, err := h.svc.List(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to list invoices")
+		api.WriteError(w, http.StatusInternalServerError, "failed to list invoices")
 		return
 	}
-	writeJSON(w, http.StatusOK, invoices)
+	api.WriteJSON(w, http.StatusOK, invoices)
 }
 
 type createInvoiceRequest struct {
@@ -42,30 +43,30 @@ type createInvoiceRequest struct {
 func (h *InvoiceHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req createInvoiceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+		api.WriteError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 	if req.CustomerName == "" || req.Currency == "" || req.Amount <= 0 {
-		writeError(w, http.StatusBadRequest, "customer_name, amount, and currency are required")
+		api.WriteError(w, http.StatusBadRequest, "customer_name, amount, and currency are required")
 		return
 	}
 
 	inv, err := h.svc.CreateInvoice(r.Context(), req.CustomerName, req.Amount, req.Currency, req.DueDate)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to create invoice")
+		api.WriteError(w, http.StatusInternalServerError, "failed to create invoice")
 		return
 	}
-	writeJSON(w, http.StatusCreated, inv)
+	api.WriteJSON(w, http.StatusCreated, inv)
 }
 
 // GET /api/invoices/summary
 func (h *InvoiceHandler) Summary(w http.ResponseWriter, r *http.Request) {
 	summary, err := h.svc.GetSummary(r.Context(), time.Now())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to get summary")
+		api.WriteError(w, http.StatusInternalServerError, "failed to get summary")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]interface{}{
+	api.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"paid_count":    summary.PaidCount,
 		"unpaid_count":  summary.UnpaidCount,
 		"overdue_count": summary.OverdueCount,
@@ -77,20 +78,20 @@ func (h *InvoiceHandler) Summary(w http.ResponseWriter, r *http.Request) {
 func (h *InvoiceHandler) Pay(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid invoice id")
+		api.WriteError(w, http.StatusBadRequest, "invalid invoice id")
 		return
 	}
 
 	if err := h.svc.MarkAsPaid(r.Context(), id); err != nil {
 		if errors.Is(err, apperrors.ErrNotFound) {
-			writeError(w, http.StatusNotFound, "invoice not found")
+			api.WriteError(w, http.StatusNotFound, "invoice not found")
 			return
 		}
 		if errors.Is(err, apperrors.ErrConflict) {
-			writeError(w, http.StatusConflict, "invoice already paid")
+			api.WriteError(w, http.StatusConflict, "invoice already paid")
 			return
 		}
-		writeError(w, http.StatusInternalServerError, "failed to mark invoice as paid")
+		api.WriteError(w, http.StatusInternalServerError, "failed to mark invoice as paid")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
