@@ -52,11 +52,20 @@ func (t *Task) Assign(userID uuid.UUID) {
 }
 
 func (t *Task) StartProgress() error {
-	panic("not implemented")
+	if t.Status != "todo" {
+		return fmt.Errorf("task %s: %w", t.ID, apperrors.ErrConflict)
+	}
+	t.Status = "in_progress"
+	return nil
 }
 
 func (t *Task) Reopen() error {
-	panic("not implemented")
+	if t.Status != "done" {
+		return fmt.Errorf("task %s: %w", t.ID, apperrors.ErrConflict)
+	}
+	t.Status = "in_progress"
+	t.CompletedAt = nil
+	return nil
 }
 
 func (t *Task) Complete(now time.Time) error {
