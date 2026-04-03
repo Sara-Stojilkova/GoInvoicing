@@ -12,13 +12,14 @@ import (
 type Task struct {
 	ID          uuid.UUID  `json:"id"`
 	Title       string     `json:"title"`
-	Description *string    `json:"description"`  // nil = not set
-	Status      string     `json:"status"`        // "todo", "in_progress", "done"
-	Priority    string     `json:"priority"`      // "low", "medium", "high"
-	AssigneeID  *uuid.UUID `json:"assignee_id"`   // nil = unassigned
+	Description *string    `json:"description"` // nil = not set
+	Status      string     `json:"status"`      // "todo", "in_progress", "done"
+	Priority    string     `json:"priority"`    // "low", "medium", "high"
+	AgencyID    uuid.UUID  `json:"agency_id"`   // agency of the user who created this task
+	AssigneeID  *uuid.UUID `json:"assignee_id"` // nil = unassigned
 	CreatedAt   time.Time  `json:"created_at"`
-	DueDate     *time.Time `json:"due_date"`      // nil = no due date
-	CompletedAt *time.Time `json:"completed_at"`  // nil = not complete
+	DueDate     *time.Time `json:"due_date"`     // nil = no due date
+	CompletedAt *time.Time `json:"completed_at"` // nil = not complete
 }
 
 func (t Task) IsAssigned() bool {
@@ -34,6 +35,16 @@ func (t Task) IsOverdue(now time.Time) bool {
 		return false
 	}
 	return now.After(*t.DueDate)
+}
+
+// CanBeAssignedTo returns true if the assignee belongs to the same agency as the task.
+func (t Task) CanBeAssignedTo(assigneeAgencyID uuid.UUID) bool {
+	return t.AgencyID == assigneeAgencyID
+}
+
+// IsAccessibleBy returns true if the requesting user belongs to the same agency as the task.
+func (t Task) IsAccessibleBy(userAgencyID uuid.UUID) bool {
+	return t.AgencyID == userAgencyID
 }
 
 func (t *Task) Assign(userID uuid.UUID) {
@@ -73,6 +84,16 @@ func FilterByPriority(tasks []Task, priority string) []Task {
 	var result []Task
 	for _, t := range tasks {
 		if t.Priority == priority {
+			result = append(result, t)
+		}
+	}
+	return result
+}
+
+func FilterByAgency(tasks []Task, agencyID uuid.UUID) []Task {
+	var result []Task
+	for _, t := range tasks {
+		if t.AgencyID == agencyID {
 			result = append(result, t)
 		}
 	}
