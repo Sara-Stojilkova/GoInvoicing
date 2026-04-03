@@ -9,9 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	api "backend/api/invoice"
+	invoiceAPI "backend/api/invoice"
+	taskAPI "backend/api/task"
 	"backend/internal/repositories/memory"
-	services "backend/internal/services/invoice"
+	invoiceServices "backend/internal/services/invoice"
+	taskServices "backend/internal/services/task"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -33,9 +35,17 @@ func cors(origin string) func(http.Handler) http.Handler {
 }
 
 func main() {
-	repo := memory.NewInvoiceRepo()
-	svc := services.NewInvoiceService(repo)
-	handler := api.NewInvoiceHandler(svc)
+	// Repositories
+	invoiceRepo := memory.NewInvoiceRepo()
+	taskRepo := memory.NewTaskRepo()
+
+	// Services
+	invoiceSvc := invoiceServices.NewInvoiceService(invoiceRepo)
+	taskSvc := taskServices.NewTaskService(taskRepo)
+
+	// Handlers
+	invoiceHandler := invoiceAPI.NewInvoiceHandler(invoiceSvc)
+	taskHandler := taskAPI.NewTaskHandler(taskSvc)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -43,10 +53,18 @@ func main() {
 	r.Use(cors("http://localhost:5173"))
 
 	r.Route("/api/invoices", func(r chi.Router) {
-		r.Get("/", handler.List)
-		r.Post("/", handler.Create)
-		r.Get("/summary", handler.Summary)
-		r.Post("/{id}/pay", handler.Pay)
+		r.Get("/", invoiceHandler.List)
+		r.Post("/", invoiceHandler.Create)
+		r.Get("/summary", invoiceHandler.Summary)
+		r.Post("/{id}/pay", invoiceHandler.Pay)
+	})
+
+	r.Route("/api/tasks", func(r chi.Router) {
+		r.Get("/", taskHandler.List)
+		r.Post("/", taskHandler.Create)
+		r.Get("/{id}", taskHandler.Get)
+		r.Post("/{id}/assign", taskHandler.Assign)
+		r.Post("/{id}/complete", taskHandler.Complete)
 	})
 
 	srv := &http.Server{
