@@ -150,14 +150,18 @@ func TestComplete(t *testing.T) {
 }
 
 func TestStartProgress(t *testing.T) {
+	now := time.Date(2026, 4, 3, 12, 0, 0, 0, time.UTC)
+
 	tests := []struct {
-		name       string
-		task       Task
-		wantStatus string
-		wantErr    error
+		name               string
+		task               Task
+		wantStatus         string
+		wantCompletedAtNil bool
+		wantErr            error
 	}{
-		{"todo task transitions to in_progress", Task{ID: uuid.New(), Status: "todo"}, "in_progress", nil},
-		{"already in progress stays unchanged",  Task{ID: uuid.New(), Status: "in_progress"}, "in_progress", apperrors.ErrConflict},
+		{"todo task transitions to in_progress", Task{ID: uuid.New(), Status: "todo"}, "in_progress", true, nil},
+		{"done task transitions to in_progress", Task{ID: uuid.New(), Status: "done", CompletedAt: timePtr(now.Add(-time.Hour))}, "in_progress", true, nil},
+		{"already in_progress stays unchanged", Task{ID: uuid.New(), Status: "in_progress"}, "in_progress", true, apperrors.ErrConflict},
 	}
 
 	for _, tt := range tests {
@@ -174,42 +178,8 @@ func TestStartProgress(t *testing.T) {
 			if task.Status != tt.wantStatus {
 				t.Errorf("StartProgress() Status = %q, want %q", task.Status, tt.wantStatus)
 			}
-		})
-	}
-}
-
-func TestReopen(t *testing.T) {
-	now := time.Date(2026, 4, 3, 12, 0, 0, 0, time.UTC)
-	completedAt := timePtr(now.Add(-time.Hour))
-
-	tests := []struct {
-		name              string
-		task              Task
-		wantStatus        string
-		wantCompletedAt   *time.Time
-		wantErr           error
-	}{
-		{"done task transitions to in_progress",  Task{ID: uuid.New(), Status: "done", CompletedAt: completedAt}, "in_progress", nil,          nil},
-		{"todo task stays unchanged",             Task{ID: uuid.New(), Status: "todo"},                           "todo",        nil,          apperrors.ErrConflict},
-		{"in_progress task stays unchanged",      Task{ID: uuid.New(), Status: "in_progress"},                   "in_progress", nil,          apperrors.ErrConflict},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			task := tt.task
-			err := task.Reopen()
-			if tt.wantErr != nil {
-				if !errors.Is(err, tt.wantErr) {
-					t.Errorf("Reopen() error = %v, want %v", err, tt.wantErr)
-				}
-			} else if err != nil {
-				t.Fatalf("Reopen() unexpected error: %v", err)
-			}
-			if task.Status != tt.wantStatus {
-				t.Errorf("Reopen() Status = %q, want %q", task.Status, tt.wantStatus)
-			}
-			if task.CompletedAt != tt.wantCompletedAt {
-				t.Errorf("Reopen() CompletedAt = %v, want %v", task.CompletedAt, tt.wantCompletedAt)
+			if tt.wantCompletedAtNil && task.CompletedAt != nil {
+				t.Errorf("StartProgress() CompletedAt = %v, want nil", task.CompletedAt)
 			}
 		})
 	}
