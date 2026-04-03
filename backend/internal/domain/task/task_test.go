@@ -149,7 +149,7 @@ func TestComplete(t *testing.T) {
 	}
 }
 
-func TestStartProgress(t *testing.T) {
+func TestSetInProgress(t *testing.T) {
 	now := time.Date(2026, 4, 3, 12, 0, 0, 0, time.UTC)
 
 	tests := []struct {
@@ -167,7 +167,7 @@ func TestStartProgress(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			task := tt.task
-			err := task.StartProgress()
+			err := task.SetInProgress()
 			if tt.wantErr != nil {
 				if !errors.Is(err, tt.wantErr) {
 					t.Errorf("StartProgress() error = %v, want %v", err, tt.wantErr)

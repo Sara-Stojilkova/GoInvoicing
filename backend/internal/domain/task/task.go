@@ -51,16 +51,8 @@ func (t *Task) Assign(userID uuid.UUID) {
 	t.AssigneeID = &userID
 }
 
-func (t *Task) StartProgress() error {
-	if t.Status != "todo" {
-		return fmt.Errorf("task %s: %w", t.ID, apperrors.ErrConflict)
-	}
-	t.Status = "in_progress"
-	return nil
-}
-
-func (t *Task) Reopen() error {
-	if t.Status != "done" {
+func (t *Task) SetInProgress() error {
+	if t.Status == "in_progress" {
 		return fmt.Errorf("task %s: %w", t.ID, apperrors.ErrConflict)
 	}
 	t.Status = "in_progress"
