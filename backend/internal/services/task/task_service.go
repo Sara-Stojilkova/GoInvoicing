@@ -97,6 +97,10 @@ func (s *TaskService) ListOverdue(ctx context.Context, agencyID uuid.UUID, now t
 	return result, nil
 }
 
+func (s *TaskService) SetInProgress(ctx context.Context, taskID uuid.UUID) error {
+	panic("not implemented")
+}
+
 func (s *TaskService) SetDueDate(ctx context.Context, taskID uuid.UUID, dueDate time.Time) error {
 	task, err := s.repo.GetByID(ctx, taskID)
 	if err != nil {

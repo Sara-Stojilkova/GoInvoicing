@@ -32,9 +32,9 @@ func TestCreateTask(t *testing.T) {
 		agencyID   uuid.UUID
 		wantStatus string
 	}{
-		{"todo status on creation",     "Fix bug",       "high",   agencyID, "todo"},
-		{"low priority task",           "Write docs",    "low",    agencyID, "todo"},
-		{"task belongs to agency",      "Deploy service","medium", agencyID, "todo"},
+		{"todo status on creation", "Fix bug", "high", agencyID, "todo"},
+		{"low priority task", "Write docs", "low", agencyID, "todo"},
+		{"task belongs to agency", "Deploy service", "medium", agencyID, "todo"},
 	}
 
 	for _, tt := range tests {
@@ -175,10 +175,10 @@ func TestGetTask(t *testing.T) {
 	agencyB := uuid.New()
 
 	tests := []struct {
-		name             string
-		setup            func(svc *services.TaskService) uuid.UUID
-		requesterAgency  uuid.UUID
-		wantErr          error
+		name            string
+		setup           func(svc *services.TaskService) uuid.UUID
+		requesterAgency uuid.UUID
+		wantErr         error
 	}{
 		{
 			name: "success — same agency",
@@ -245,9 +245,9 @@ func TestListByAgency(t *testing.T) {
 		{
 			name: "only returns tasks from requested agency",
 			setup: func(svc *services.TaskService) {
-				svc.Create(ctx, "Task 1", "high",   agencyA)
+				svc.Create(ctx, "Task 1", "high", agencyA)
 				svc.Create(ctx, "Task 2", "medium", agencyA)
-				svc.Create(ctx, "Task 3", "low",    agencyB)
+				svc.Create(ctx, "Task 3", "low", agencyB)
 			},
 			agencyID:  agencyA,
 			wantCount: 2,
@@ -334,6 +334,79 @@ func TestListOverdue(t *testing.T) {
 			}
 			if len(tasks) != tt.wantCount {
 				t.Errorf("len(tasks) = %d, want %d", len(tasks), tt.wantCount)
+			}
+		})
+	}
+}
+
+func TestStartProgress(t *testing.T) {
+	agencyID := uuid.New()
+
+	tests := []struct {
+		name       string
+		setup      func(svc *services.TaskService) uuid.UUID
+		wantStatus string
+		wantErr    error
+	}{
+		{
+			name: "todo task transitions to in_progress",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID)
+				return task.ID
+			},
+			wantStatus: "in_progress",
+			wantErr:    nil,
+		},
+		{
+			name: "not found",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID)
+				id := task.ID
+				id[0] ^= 0xFF
+				return id
+			},
+			wantStatus: "",
+			wantErr:    apperrors.ErrNotFound,
+		},
+		{
+			name: "already in_progress stays unchanged",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID)
+				svc.SetInProgress(ctx, task.ID)
+				return task.ID
+			},
+			wantStatus: "in_progress",
+			wantErr:    apperrors.ErrConflict,
+		},
+		{
+			name: "done task transitions to in_progress with nil CompletedAt",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID)
+				svc.CompleteTask(ctx, task.ID, now)
+				return task.ID
+			},
+			wantStatus: "in_progress",
+			wantErr:    nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := newTaskService()
+			taskID := tt.setup(svc)
+			err := svc.SetInProgress(ctx, taskID)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("StartProgress() error = %v, want %v", err, tt.wantErr)
+			}
+			if tt.wantErr == apperrors.ErrNotFound {
+				return
+			}
+			task, _ := svc.GetTask(ctx, taskID, agencyID)
+			if task.Status != tt.wantStatus {
+				t.Errorf("StartProgress() Status = %q, want %q", task.Status, tt.wantStatus)
+			}
+			if tt.wantErr == nil && task.CompletedAt != nil {
+				t.Errorf("StartProgress() CompletedAt = %v, want nil", task.CompletedAt)
 			}
 		})
 	}
