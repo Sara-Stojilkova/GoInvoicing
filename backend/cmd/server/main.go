@@ -65,6 +65,7 @@ func main() {
 		r.Get("/{id}", taskHandler.Get)
 		r.Post("/{id}/assign", taskHandler.Assign)
 		r.Post("/{id}/complete", taskHandler.Complete)
+		r.Post("/{id}/set-in-progress", taskHandler.SetInProgress)
 	})
 
 	srv := &http.Server{

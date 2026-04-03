@@ -162,7 +162,24 @@ func (h *TaskHandler) Complete(w http.ResponseWriter, r *http.Request) {
 
 // POST /tasks/{id}/set-in-progress
 func (h *TaskHandler) SetInProgress(w http.ResponseWriter, r *http.Request) {
-	panic("not implemented")
+	taskID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		api.WriteError(w, http.StatusBadRequest, "invalid task id")
+		return
+	}
+	if err := h.svc.SetInProgress(r.Context(), taskID); err != nil {
+		if errors.Is(err, apperrors.ErrNotFound) {
+			api.WriteError(w, http.StatusNotFound, "task not found")
+			return
+		}
+		if errors.Is(err, apperrors.ErrConflict) {
+			api.WriteError(w, http.StatusConflict, "task is already in progress")
+			return
+		}
+		api.WriteError(w, http.StatusInternalServerError, "failed to set task in progress")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func parseUUIDParam(r *http.Request, key string) (uuid.UUID, error) {
