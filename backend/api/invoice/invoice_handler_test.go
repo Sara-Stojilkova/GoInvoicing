@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"backend/internal/domain"
+	domain "backend/internal/domain/invoice"
 	"backend/internal/repositories/memory"
-	"backend/internal/services"
+	services "backend/internal/services/invoice"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -87,12 +87,12 @@ func TestInvoiceHandlerCreate(t *testing.T) {
 		body       string
 		wantStatus int
 	}{
-		{"valid request",      validBody,                                                        http.StatusCreated},
-		{"malformed json",     `{bad json}`,                                                     http.StatusBadRequest},
-		{"missing customer",   `{"amount":100,"currency":"USD"}`,                                http.StatusBadRequest},
-		{"missing currency",   `{"customer_name":"Acme","amount":100}`,                          http.StatusBadRequest},
-		{"amount zero",        `{"customer_name":"Acme","amount":0,"currency":"USD"}`,           http.StatusBadRequest},
-		{"amount negative",    `{"customer_name":"Acme","amount":-5,"currency":"USD"}`,          http.StatusBadRequest},
+		{"valid request", validBody, http.StatusCreated},
+		{"malformed json", `{bad json}`, http.StatusBadRequest},
+		{"missing customer", `{"amount":100,"currency":"USD"}`, http.StatusBadRequest},
+		{"missing currency", `{"customer_name":"Acme","amount":100}`, http.StatusBadRequest},
+		{"amount zero", `{"customer_name":"Acme","amount":0,"currency":"USD"}`, http.StatusBadRequest},
+		{"amount negative", `{"customer_name":"Acme","amount":-5,"currency":"USD"}`, http.StatusBadRequest},
 	}
 
 	for _, tt := range tests {
@@ -180,12 +180,12 @@ func TestInvoiceHandlerPay(t *testing.T) {
 
 func TestInvoiceHandlerSummary(t *testing.T) {
 	tests := []struct {
-		name         string
-		setup        func(*services.InvoiceService)
-		wantStatus   int
-		wantPaid     float64
-		wantUnpaid   float64
-		wantOverdue  float64
+		name        string
+		setup       func(*services.InvoiceService)
+		wantStatus  int
+		wantPaid    float64
+		wantUnpaid  float64
+		wantOverdue float64
 	}{
 		{
 			"empty repo — all counts zero",

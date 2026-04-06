@@ -9,9 +9,15 @@ import (
 	"syscall"
 	"time"
 
-	"backend/api"
+	agencyAPI "backend/api/agency"
+	invoiceAPI "backend/api/invoice"
+	taskAPI "backend/api/task"
+	userAPI "backend/api/user"
 	"backend/internal/repositories/memory"
-	"backend/internal/services"
+	agencyServices "backend/internal/services/agency"
+	invoiceServices "backend/internal/services/invoice"
+	taskServices "backend/internal/services/task"
+	userServices "backend/internal/services/user"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -33,9 +39,23 @@ func cors(origin string) func(http.Handler) http.Handler {
 }
 
 func main() {
-	repo := memory.NewInvoiceRepo()
-	svc := services.NewInvoiceService(repo)
-	handler := api.NewInvoiceHandler(svc)
+	// Repositories
+	invoiceRepo := memory.NewInvoiceRepo()
+	taskRepo := memory.NewTaskRepo()
+	userRepo := memory.NewUserRepo()
+	agencyRepo := memory.NewAgencyRepo()
+
+	// Services
+	invoiceSvc := invoiceServices.NewInvoiceService(invoiceRepo)
+	taskSvc := taskServices.NewTaskService(taskRepo)
+	userSvc := userServices.NewUserService(userRepo)
+	agencySvc := agencyServices.NewAgencyService(agencyRepo)
+
+	// Handlers
+	invoiceHandler := invoiceAPI.NewInvoiceHandler(invoiceSvc)
+	taskHandler := taskAPI.NewTaskHandler(taskSvc)
+	userHandler := userAPI.NewUserHandler(userSvc)
+	agencyHandler := agencyAPI.NewAgencyHandler(agencySvc)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -43,10 +63,31 @@ func main() {
 	r.Use(cors("http://localhost:5173"))
 
 	r.Route("/api/invoices", func(r chi.Router) {
-		r.Get("/", handler.List)
-		r.Post("/", handler.Create)
-		r.Get("/summary", handler.Summary)
-		r.Post("/{id}/pay", handler.Pay)
+		r.Get("/", invoiceHandler.List)
+		r.Post("/", invoiceHandler.Create)
+		r.Get("/summary", invoiceHandler.Summary)
+		r.Post("/{id}/pay", invoiceHandler.Pay)
+	})
+
+	r.Route("/api/tasks", func(r chi.Router) {
+		r.Get("/", taskHandler.List)
+		r.Post("/", taskHandler.Create)
+		r.Get("/{id}", taskHandler.Get)
+		r.Post("/{id}/assign", taskHandler.Assign)
+		r.Post("/{id}/complete", taskHandler.Complete)
+		r.Post("/{id}/set-in-progress", taskHandler.SetInProgress)
+	})
+
+	r.Route("/api/users", func(r chi.Router) {
+		r.Post("/", userHandler.Create)
+		r.Get("/", userHandler.ListByAgency)
+		r.Get("/{id}", userHandler.Get)
+	})
+
+	r.Route("/api/agencies", func(r chi.Router) {
+		r.Post("/", agencyHandler.Create)
+		r.Get("/", agencyHandler.List)
+		r.Get("/{id}", agencyHandler.Get)
 	})
 
 	srv := &http.Server{
