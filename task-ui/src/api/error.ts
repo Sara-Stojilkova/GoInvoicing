@@ -1,7 +1,9 @@
 export class ApiError extends Error {
   status: number;
 
-  constructor(_status: number, _message: string) {
-    throw new Error("not implemented");
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+    this.name = "ApiError";
   }
 }
