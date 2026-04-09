@@ -1,25 +1,32 @@
 import type { Task } from "../types/api";
+import { request } from "./client";
 
-export function listTasks(_agencyId: string): Promise<Task[]> {
-  throw new Error("not implemented");
+export function listTasks(agencyId: string): Promise<Task[]> {
+  return request<Task[]>(`/api/tasks?agency_id=${agencyId}`);
 }
 
-export function getTask(_id: string, _agencyId: string): Promise<Task> {
-  throw new Error("not implemented");
+export function getTask(id: string, agencyId: string): Promise<Task> {
+  return request<Task>(`/api/tasks/${id}?agency_id=${agencyId}`);
 }
 
-export function createTask(_data: { title: string; priority: string; agency_id: string }): Promise<Task> {
-  throw new Error("not implemented");
+export function createTask(data: { title: string; priority: string; agency_id: string }): Promise<Task> {
+  return request<Task>("/api/tasks", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
-export function assignTask(_id: string, _data: { assignee_id: string; assignee_agency_id: string }): Promise<void> {
-  throw new Error("not implemented");
+export function assignTask(id: string, data: { assignee_id: string; assignee_agency_id: string }): Promise<void> {
+  return request<void>(`/api/tasks/${id}/assign`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
-export function completeTask(_id: string): Promise<void> {
-  throw new Error("not implemented");
+export function completeTask(id: string): Promise<void> {
+  return request<void>(`/api/tasks/${id}/complete`, { method: "POST" });
 }
 
-export function setTaskInProgress(_id: string): Promise<void> {
-  throw new Error("not implemented");
+export function setTaskInProgress(id: string): Promise<void> {
+  return request<void>(`/api/tasks/${id}/set-in-progress`, { method: "POST" });
 }
