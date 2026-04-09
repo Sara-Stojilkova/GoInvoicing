@@ -23,7 +23,7 @@ describe("request", () => {
   });
 
   it("throws ApiError with the response status on a 404", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeFetchResponse(404, { error: "not found" })));
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => makeFetchResponse(404, { error: "not found" })));
 
     await expect(request("/agencies/999")).rejects.toBeInstanceOf(ApiError);
     await expect(request("/agencies/999")).rejects.toMatchObject({ status: 404 });
