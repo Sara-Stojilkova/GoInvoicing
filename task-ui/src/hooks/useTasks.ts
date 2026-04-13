@@ -1,5 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listTasks, createTask, completeTask } from "../api/tasks";
+import { listTasks, getTask, createTask, completeTask } from "../api/tasks";
+
+export function useTask(_taskId: string | null, _agencyId: string): ReturnType<typeof useQuery> {
+  throw new Error("not implemented");
+}
 
 export function useCompleteTask(agencyId: string) {
   const queryClient = useQueryClient();
