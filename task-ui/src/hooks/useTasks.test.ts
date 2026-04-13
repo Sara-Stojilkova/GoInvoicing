@@ -105,7 +105,7 @@ describe("useCreateTask", () => {
     result.current.mutate(payload);
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(spy).toHaveBeenCalledWith(payload);
+    expect(spy).toHaveBeenCalledWith(payload, expect.any(Object));
   });
 
   it("invalidates the tasks list cache for the agency on success", async () => {
