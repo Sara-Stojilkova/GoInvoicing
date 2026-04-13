@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
-import { useTasks, useCreateTask } from "./useTasks";
+import { useTasks, useCreateTask, useCompleteTask } from "./useTasks";
 import * as tasksApi from "../api/tasks";
 import type { Task } from "../types/api";
 
@@ -151,6 +151,65 @@ describe("useCreateTask", () => {
 
     const { result } = renderHook(() => useCreateTask(agencyId), { wrapper: Wrapper });
     result.current.mutate(payload);
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe("useCompleteTask", () => {
+  it("calls completeTask with the task id", async () => {
+    const spy = vi.spyOn(tasksApi, "completeTask").mockResolvedValue(undefined);
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useCompleteTask(agencyId), { wrapper: Wrapper });
+    result.current.mutate(tasks[0].id);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(spy).toHaveBeenCalledWith(tasks[0].id, expect.any(Object));
+  });
+
+  it("invalidates the tasks list cache for the agency on success", async () => {
+    vi.spyOn(tasksApi, "completeTask").mockResolvedValue(undefined);
+    vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
+    const { queryClient, Wrapper } = makeWrapper();
+
+    await queryClient.prefetchQuery({
+      queryKey: ["tasks", agencyId],
+      queryFn: () => tasksApi.listTasks(agencyId),
+    });
+    expect(queryClient.getQueryState(["tasks", agencyId])?.isInvalidated).toBe(false);
+
+    const { result } = renderHook(() => useCompleteTask(agencyId), { wrapper: Wrapper });
+    result.current.mutate(tasks[0].id);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(queryClient.getQueryState(["tasks", agencyId])?.isInvalidated).toBe(true);
+  });
+
+  it("does not invalidate a different agency's task cache", async () => {
+    const otherAgencyId = "ffffffff-0000-0000-0000-000000000099";
+    vi.spyOn(tasksApi, "completeTask").mockResolvedValue(undefined);
+    vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
+    const { queryClient, Wrapper } = makeWrapper();
+
+    await queryClient.prefetchQuery({
+      queryKey: ["tasks", otherAgencyId],
+      queryFn: () => tasksApi.listTasks(otherAgencyId),
+    });
+
+    const { result } = renderHook(() => useCompleteTask(agencyId), { wrapper: Wrapper });
+    result.current.mutate(tasks[0].id);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(queryClient.getQueryState(["tasks", otherAgencyId])?.isInvalidated).toBe(false);
+  });
+
+  it("exposes isError when completeTask rejects", async () => {
+    vi.spyOn(tasksApi, "completeTask").mockRejectedValue(new Error("already completed"));
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useCompleteTask(agencyId), { wrapper: Wrapper });
+    result.current.mutate(tasks[0].id);
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
