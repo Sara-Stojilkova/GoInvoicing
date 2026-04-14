@@ -31,7 +31,7 @@ export function TaskListPage({ agencyId }: { agencyId: string }) {
   }
 
   return (
-    <table>
+    <table className="task-table">
       <tbody>
         {tasks.map((task) => (
           <tr key={task.id}>
