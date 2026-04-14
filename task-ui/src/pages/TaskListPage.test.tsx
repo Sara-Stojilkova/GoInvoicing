@@ -143,6 +143,7 @@ describe("TaskListPage", () => {
         expect(screen.getByText("Fix login bug")).toBeInTheDocument()
       );
       expect(screen.getByText("Write docs")).toBeInTheDocument();
+      expect(screen.getByText("Deploy to production")).toBeInTheDocument();
     });
 
     it("renders each task's status", async () => {
@@ -153,6 +154,7 @@ describe("TaskListPage", () => {
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.getByText(/todo/i)).toBeInTheDocument();
       expect(screen.getByText(/in.progress/i)).toBeInTheDocument();
+      expect(screen.getByText(/done/i)).toBeInTheDocument();
     });
 
     it("renders each task's priority", async () => {
@@ -161,7 +163,7 @@ describe("TaskListPage", () => {
       renderPage(agencyId);
 
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByText(/high/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/high/i).length).toBeGreaterThan(0);
       expect(screen.getByText(/low/i)).toBeInTheDocument();
     });
 
