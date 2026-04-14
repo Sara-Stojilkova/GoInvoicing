@@ -65,4 +65,12 @@ describe("TaskRow", () => {
     const button = screen.getByRole("button", { name: /complete/i });
     expect(button).toBeDisabled();
   });
+
+  it("shows spinner when completing task", () => {
+    useCompleteTaskMock.mockReturnValue({ mutate, isPending: true, });
+    render(<table><tbody><tr><TaskRow task={task} /></tr></tbody></table>);
+    const button = screen.getByRole("button", { name: /complete/i });
+    expect(button).toBeDisabled();
+    expect(button.querySelector("span")).toBeInTheDocument();
+  });
 });
