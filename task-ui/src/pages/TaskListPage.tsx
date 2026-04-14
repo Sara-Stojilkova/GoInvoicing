@@ -1,3 +1,43 @@
-export function TaskListPage(_props: { agencyId: string }): never {
-  throw new Error("not implemented");
+import { Box, Button, CircularProgress, Typography } from "@mui/material";
+import { useTasks } from "../hooks/useTasks";
+
+export function TaskListPage({ agencyId }: { agencyId: string }) {
+  const { data: tasks, isLoading, isError, error, refetch } = useTasks(agencyId);
+
+  if (isLoading) {
+    return (
+      <Box role="status" sx={{ display: "flex", alignItems: "center", gap: 1, p: 4 }}>
+        <CircularProgress size={20} aria-hidden="true" />
+        <Typography>Loading tasks…</Typography>
+      </Box>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Box role="alert" sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1, p: 4 }}>
+        <Typography sx={{ fontWeight: 600 }}>Failed to load tasks.</Typography>
+        <Typography sx={{ color: "text.secondary" }}>
+        {error instanceof Error ? error.message : "Something went wrong. Please try again."}
+        </Typography>
+        <Button variant="outlined" onClick={() => refetch()}>Retry</Button>
+      </Box>
+    );
+  }
+
+  if (!tasks || tasks.length === 0) {
+    return <p>No tasks found.</p>;
+  }
+
+  return (
+    <ul>
+      {tasks.map((task) => (
+        <li key={task.id}>
+          <span>{task.title}</span>
+          <span>{task.status}</span>
+          <span>{task.priority}</span>
+        </li>
+      ))}
+    </ul>
+  );
 }
