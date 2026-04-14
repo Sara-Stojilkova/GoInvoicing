@@ -1,5 +1,6 @@
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useTasks } from "../hooks/useTasks";
+import { StatusBadge, type Status} from "../component/StatusBadge";
 
 export function TaskListPage({ agencyId }: { agencyId: string }) {
   const { data: tasks, isLoading, isError, error, refetch } = useTasks(agencyId);
@@ -34,7 +35,7 @@ export function TaskListPage({ agencyId }: { agencyId: string }) {
       {tasks.map((task) => (
         <li key={task.id}>
           <span>{task.title}</span>
-          <span>{task.status}</span>
+          <StatusBadge status={task.status as Status}/>
           <span>{task.priority}</span>
         </li>
       ))}
