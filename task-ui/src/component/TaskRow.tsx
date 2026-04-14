@@ -12,7 +12,7 @@ export function TaskRow({ task }: { task: Task }) {
       <td>{task.title}</td>
       <td><StatusBadge status={task.status} /></td>
       <td>{task.priority}</td>
-      <td>{!isDone && (<button onClick={() => mutate(task.id)} disabled={isPending}>Complete</button>)}</td>
+      <td><button onClick={() => mutate(task.id)} disabled={isPending || isDone}>Complete</button></td>
     </>
   );
 }

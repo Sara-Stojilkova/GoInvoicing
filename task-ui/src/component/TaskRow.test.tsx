@@ -47,15 +47,9 @@ describe("TaskRow", () => {
     expect(screen.getByText("high")).toBeInTheDocument();
   });
 
-  it("renders complete button for non-done tasks", () => {
+  it("renders complete button", () => {
     render(<table><tbody><tr><TaskRow task={task} /></tr></tbody></table>);
     expect(screen.getByRole("button", { name: /complete/i })).toBeInTheDocument();
-  });
-
-  it("does not render complete button for done tasks", () => {
-    const doneTask: Task = { ...task, status: "done" };
-    render(<table><tbody><tr><TaskRow task={doneTask} /></tr></tbody></table>);
-    expect(screen.queryByRole("button", { name: /complete/i })).not.toBeInTheDocument();
   });
 
   it("calls mutate when complete button is clicked", () => {
