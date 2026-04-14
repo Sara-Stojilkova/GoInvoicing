@@ -1,6 +1,5 @@
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useTasks } from "../hooks/useTasks";
-import { StatusBadge, type Status} from "../component/StatusBadge";
 import { TaskRow } from "../component/TaskRow";
 
 export function TaskListPage({ agencyId }: { agencyId: string }) {

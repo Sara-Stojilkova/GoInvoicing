@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi , beforeEach } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { TaskRow } from "./TaskRow.tsx";
 import type { Task } from "../types/api";
 
@@ -17,6 +17,20 @@ const task: Task = {
   completed_at: null,
 };
 
+const mutate = vi.fn();
+const useCompleteTaskMock = vi.fn();
+
+vi.mock("../hooks/useTasks", () => ({
+  useCompleteTask: () => useCompleteTaskMock(),
+}));
+
+
+beforeEach(() => {
+  mutate.mockClear();
+  useCompleteTaskMock.mockClear();
+  useCompleteTaskMock.mockReturnValue({ mutate, isPending: false,});
+});
+
 describe("TaskRow", () => {
   it("renders the task title", () => {
     render(<table><tbody><tr><TaskRow task={task} /></tr></tbody></table>);
@@ -31,5 +45,30 @@ describe("TaskRow", () => {
   it("renders the priority", () => {
     render(<table><tbody><tr><TaskRow task={task} /></tr></tbody></table>);
     expect(screen.getByText("high")).toBeInTheDocument();
+  });
+
+  it("renders complete button for non-done tasks", () => {
+    render(<table><tbody><tr><TaskRow task={task} /></tr></tbody></table>);
+    expect(screen.getByRole("button", { name: /complete/i })).toBeInTheDocument();
+  });
+
+  it("does not render complete button for done tasks", () => {
+    const doneTask: Task = { ...task, status: "done" };
+    render(<table><tbody><tr><TaskRow task={doneTask} /></tr></tbody></table>);
+    expect(screen.queryByRole("button", { name: /complete/i })).not.toBeInTheDocument();
+  });
+
+  it("calls mutate when complete button is clicked", () => {
+    useCompleteTaskMock.mockReturnValue({ mutate, isPending: false, });
+    render(<table><tbody><tr><TaskRow task={task} /></tr></tbody></table>);
+    fireEvent.click(screen.getByRole("button", { name: /complete/i }));
+    expect(mutate).toHaveBeenCalledWith(task.id);
+  });
+
+  it("disables button while mutation is pending", () => {
+    useCompleteTaskMock.mockReturnValue({ mutate, isPending: true, });
+    render(<table><tbody><tr><TaskRow task={task} /></tr></tbody></table>);
+    const button = screen.getByRole("button", { name: /complete/i });
+    expect(button).toBeDisabled();
   });
 });
