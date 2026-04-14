@@ -68,17 +68,13 @@ describe("TaskListPage", () => {
   describe("loading state", () => {
     it("renders a loading indicator while fetching", () => {
       vi.spyOn(tasksApi, "listTasks").mockReturnValue(new Promise(() => {}));
-
       renderPage(agencyId);
-
       expect(screen.getByRole("status")).toBeInTheDocument();
     });
 
     it("does not render any task titles while loading", () => {
       vi.spyOn(tasksApi, "listTasks").mockReturnValue(new Promise(() => {}));
-
       renderPage(agencyId);
-
       expect(screen.queryByText("Fix login bug")).not.toBeInTheDocument();
     });
   });
@@ -86,9 +82,7 @@ describe("TaskListPage", () => {
   describe("error state", () => {
     it("renders an error message when the request fails", async () => {
       vi.spyOn(tasksApi, "listTasks").mockRejectedValue(new Error("network error"));
-
       renderPage(agencyId);
-
       await waitFor(() =>
         expect(screen.getByRole("alert")).toBeInTheDocument()
       );
@@ -96,9 +90,7 @@ describe("TaskListPage", () => {
 
     it("shows a retry button on error", async () => {
       vi.spyOn(tasksApi, "listTasks").mockRejectedValue(new Error("network error"));
-
       renderPage(agencyId);
-
       await waitFor(() =>
         expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument()
       );
@@ -108,12 +100,9 @@ describe("TaskListPage", () => {
       const spy = vi.spyOn(tasksApi, "listTasks")
         .mockRejectedValueOnce(new Error("network error"))
         .mockResolvedValue(tasks);
-
       renderPage(agencyId);
-
       await waitFor(() => screen.getByRole("button", { name: /retry/i }));
       await userEvent.click(screen.getByRole("button", { name: /retry/i }));
-
       await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
     });
 
@@ -121,12 +110,9 @@ describe("TaskListPage", () => {
       vi.spyOn(tasksApi, "listTasks")
         .mockRejectedValueOnce(new Error("network error"))
         .mockResolvedValue(tasks);
-
       renderPage(agencyId);
-
       await waitFor(() => screen.getByRole("button", { name: /retry/i }));
       await userEvent.click(screen.getByRole("button", { name: /retry/i }));
-
       await waitFor(() =>
         expect(screen.getByText("Fix login bug")).toBeInTheDocument()
       );
@@ -136,9 +122,7 @@ describe("TaskListPage", () => {
   describe("success state", () => {
     it("renders a list of tasks on success", async () => {
       vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
-
       renderPage(agencyId);
-
       await waitFor(() =>
         expect(screen.getByText("Fix login bug")).toBeInTheDocument()
       );
@@ -148,9 +132,7 @@ describe("TaskListPage", () => {
 
     it("renders each task's status", async () => {
       vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
-
       renderPage(agencyId);
-
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.getByText(/todo/i)).toBeInTheDocument();
       expect(screen.getByText(/in.progress/i)).toBeInTheDocument();
@@ -159,9 +141,7 @@ describe("TaskListPage", () => {
 
     it("renders each task's priority", async () => {
       vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
-
       renderPage(agencyId);
-
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.getAllByText(/high/i).length).toBeGreaterThan(0);
       expect(screen.getByText(/low/i)).toBeInTheDocument();
@@ -169,9 +149,7 @@ describe("TaskListPage", () => {
 
     it("renders an empty state message when there are no tasks", async () => {
       vi.spyOn(tasksApi, "listTasks").mockResolvedValue([]);
-
       renderPage(agencyId);
-
       await waitFor(() =>
         expect(screen.getByText(/no tasks/i)).toBeInTheDocument()
       );
@@ -179,9 +157,7 @@ describe("TaskListPage", () => {
 
     it("does not render the loading indicator after tasks load", async () => {
       vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
-
       renderPage(agencyId);
-
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
