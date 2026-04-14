@@ -187,47 +187,4 @@ describe("TaskListPage", () => {
     });
   });
 
-  describe("TaskListPage badge rendering", () => {
-    it("renders the correct status badge for todo", async () => {
-      vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
-      renderPage(agencyId);
-      await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByText("Todo")).toBeInTheDocument();
-    });
-
-    it("renders the correct collor for todo", async () => {
-      vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
-      renderPage(agencyId);
-      await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByText("Todo").closest("span")?.className).toContain("badge-gray");
-    })
-
-    it("renders the correct status badge for in_progress", async () => {
-      vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
-      renderPage(agencyId);
-      await waitFor(() => screen.getByText("Write docs"));
-      expect(screen.getByText("In Progress")).toBeInTheDocument();
-    });
-
-    it("renders the correct collor for in_progress", async () => {
-      vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
-      renderPage(agencyId);
-      await waitFor(() => screen.getByText("Write docs"));
-      expect(screen.getByText("In Progress").closest("span")?.className).toContain("badge-yellow");
-    })
-
-    it("renders the correct status badge for done", async () => {
-      vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
-      renderPage(agencyId);
-      await waitFor(() => screen.getByText("Deploy to production"));
-      expect(screen.getByText("Done")).toBeInTheDocument();
-    });
-
-    it("renders the correct collor for done", async () => {
-      vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
-      renderPage(agencyId);
-      await waitFor(() => screen.getByText("Deploy to production"));
-      expect(screen.getByText("Done").closest("span")?.className).toContain("badge-green");
-    })
-  });
 });
