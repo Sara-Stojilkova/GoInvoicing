@@ -64,11 +64,14 @@ describe("CreateTaskForm", () => {
     expect(screen.getByText(/failed/i)).toBeInTheDocument();
   });
 
-  it("resets form after success", () => {
+  it("resets form after submit", () => {
     render(<CreateTaskForm agencyId="a1" />);
-    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "New task" } });
-    fireEvent.change(screen.getByLabelText(/priority/i), { target: { value: "high" } });
+    const title = screen.getByLabelText(/title/i);
+    const priority = screen.getByLabelText(/priority/i);
+    fireEvent.change(title, { target: { value: "New task" } });
+    fireEvent.change(priority, { target: { value: "high" } });
     fireEvent.click(screen.getByRole("button", { name: /create/i }));
-    expect(screen.getByLabelText(/title/i)).toHaveValue("");
+    expect(title).toHaveValue("");
+    expect(priority).toHaveValue("medium");
   });
 });
