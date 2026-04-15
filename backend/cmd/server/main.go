@@ -38,6 +38,13 @@ func cors(origin string) func(http.Handler) http.Handler {
 	}
 }
 
+func allowedOrigin() string {
+	if o := os.Getenv("CORS_ORIGIN"); o != "" {
+		return o
+	}
+	return "http://localhost:5173"
+}
+
 func main() {
 	// Repositories
 	invoiceRepo := memory.NewInvoiceRepo()
@@ -60,7 +67,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(cors("http://localhost:5173"))
+	r.Use(cors(allowedOrigin()))
 
 	r.Route("/api/invoices", func(r chi.Router) {
 		r.Get("/", invoiceHandler.List)
