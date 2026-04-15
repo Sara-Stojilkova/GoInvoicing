@@ -163,4 +163,65 @@ describe("TaskListPage", () => {
     });
   });
 
+  describe("status filter", () => {
+    async function renderWithTasks() {
+      vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
+      renderPage(agencyId);
+      await waitFor(() => screen.getByText("Fix login bug"));
+    }
+
+    it("renders a status filter control", async () => {
+      await renderWithTasks();
+      expect(screen.getByRole("combobox", { name: /status/i })).toBeInTheDocument();
+    });
+
+    it("defaults to showing all tasks", async () => {
+      await renderWithTasks();
+      expect(screen.getByText("Fix login bug")).toBeInTheDocument();
+      expect(screen.getByText("Write docs")).toBeInTheDocument();
+      expect(screen.getByText("Deploy to production")).toBeInTheDocument();
+    });
+
+    it("shows only todo tasks when todo is selected", async () => {
+      await renderWithTasks();
+      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "todo");
+      expect(screen.getByText("Fix login bug")).toBeInTheDocument();
+      expect(screen.queryByText("Write docs")).not.toBeInTheDocument();
+      expect(screen.queryByText("Deploy to production")).not.toBeInTheDocument();
+    });
+
+    it("shows only in-progress tasks when in_progress is selected", async () => {
+      await renderWithTasks();
+      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "in_progress");
+      expect(screen.queryByText("Fix login bug")).not.toBeInTheDocument();
+      expect(screen.getByText("Write docs")).toBeInTheDocument();
+      expect(screen.queryByText("Deploy to production")).not.toBeInTheDocument();
+    });
+
+    it("shows only done tasks when done is selected", async () => {
+      await renderWithTasks();
+      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "done");
+      expect(screen.queryByText("Fix login bug")).not.toBeInTheDocument();
+      expect(screen.queryByText("Write docs")).not.toBeInTheDocument();
+      expect(screen.getByText("Deploy to production")).toBeInTheDocument();
+    });
+
+    it("shows all tasks again when filter is reset to all", async () => {
+      await renderWithTasks();
+      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "todo");
+      expect(screen.queryByText("Write docs")).not.toBeInTheDocument();
+      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "all");
+      expect(screen.getByText("Fix login bug")).toBeInTheDocument();
+      expect(screen.getByText("Write docs")).toBeInTheDocument();
+      expect(screen.getByText("Deploy to production")).toBeInTheDocument();
+    });
+
+    it("shows an empty state when no tasks match the selected status", async () => {
+      vi.spyOn(tasksApi, "listTasks").mockResolvedValue([tasks[0]]);
+      renderPage(agencyId);
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "done");
+      expect(screen.getByText(/no tasks/i)).toBeInTheDocument();
+    });
+  });
 });
