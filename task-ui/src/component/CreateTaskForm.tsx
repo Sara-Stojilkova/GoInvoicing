@@ -23,10 +23,14 @@ export function CreateTaskForm({ agencyId }: { agencyId: string }) {
       title,
       priority,
       agency_id: agencyId,
-    });
-
-    setTitle("");
-    setPriority("medium");
+    },
+    {
+      onSuccess: () => {
+        setTitle("");
+        setPriority("medium");
+      },
+    }
+    );
   };
 
   return (
