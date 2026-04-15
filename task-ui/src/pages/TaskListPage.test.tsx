@@ -134,9 +134,9 @@ describe("TaskListPage", () => {
       vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
       renderPage(agencyId);
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByText(/todo/i)).toBeInTheDocument();
-      expect(screen.getByText(/in.progress/i)).toBeInTheDocument();
-      expect(screen.getByText(/done/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/todo/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/in.progress/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/done/i).length).toBeGreaterThan(0);
     });
 
     it("renders each task's priority", async () => {
@@ -163,4 +163,68 @@ describe("TaskListPage", () => {
     });
   });
 
+  describe("status filter", () => {
+    async function renderWithTasks() {
+      vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
+      renderPage(agencyId);
+      await waitFor(() => screen.getByText("Fix login bug"));
+    }
+
+    it("renders summary cards as filter controls", async () => {
+      await renderWithTasks();
+      expect(screen.getByRole("button", { name: /all/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /todo/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /in.progress/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /done/i })).toBeInTheDocument();
+    });
+
+    it("defaults to showing all tasks", async () => {
+      await renderWithTasks();
+      expect(screen.getByText("Fix login bug")).toBeInTheDocument();
+      expect(screen.getByText("Write docs")).toBeInTheDocument();
+      expect(screen.getByText("Deploy to production")).toBeInTheDocument();
+    });
+
+    it("shows only todo tasks when the todo card is clicked", async () => {
+      await renderWithTasks();
+      await userEvent.click(screen.getByRole("button", { name: /todo/i }));
+      expect(screen.getByText("Fix login bug")).toBeInTheDocument();
+      expect(screen.queryByText("Write docs")).not.toBeInTheDocument();
+      expect(screen.queryByText("Deploy to production")).not.toBeInTheDocument();
+    });
+
+    it("shows only in-progress tasks when the in-progress card is clicked", async () => {
+      await renderWithTasks();
+      await userEvent.click(screen.getByRole("button", { name: /in.progress/i }));
+      expect(screen.queryByText("Fix login bug")).not.toBeInTheDocument();
+      expect(screen.getByText("Write docs")).toBeInTheDocument();
+      expect(screen.queryByText("Deploy to production")).not.toBeInTheDocument();
+    });
+
+    it("shows only done tasks when the done card is clicked", async () => {
+      await renderWithTasks();
+      await userEvent.click(screen.getByRole("button", { name: /done/i }));
+      expect(screen.queryByText("Fix login bug")).not.toBeInTheDocument();
+      expect(screen.queryByText("Write docs")).not.toBeInTheDocument();
+      expect(screen.getByText("Deploy to production")).toBeInTheDocument();
+    });
+
+    it("shows all tasks again when the all card is clicked", async () => {
+      await renderWithTasks();
+      await userEvent.click(screen.getByRole("button", { name: /todo/i }));
+      expect(screen.queryByText("Write docs")).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: /all/i }));
+      expect(screen.getByText("Fix login bug")).toBeInTheDocument();
+      expect(screen.getByText("Write docs")).toBeInTheDocument();
+      expect(screen.getByText("Deploy to production")).toBeInTheDocument();
+    });
+
+    it("shows an empty state when no tasks match the selected status", async () => {
+      vi.spyOn(tasksApi, "listTasks").mockResolvedValue([tasks[0]]);
+      renderPage(agencyId);
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.click(screen.getByRole("button", { name: /done/i }));
+      expect(screen.getByText(/no tasks/i)).toBeInTheDocument();
+    });
+  });
 });
