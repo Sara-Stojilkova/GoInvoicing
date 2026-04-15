@@ -42,9 +42,12 @@ func (h *TaskHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 type createTaskRequest struct {
-	Title    string    `json:"title"`
-	Priority string    `json:"priority"`
-	AgencyID uuid.UUID `json:"agency_id"`
+	Title       string     `json:"title"`
+	Priority    string     `json:"priority"`
+	AgencyID    uuid.UUID  `json:"agency_id"`
+	Description *string    `json:"description,omitempty"`
+	AssigneeID  *uuid.UUID `json:"assignee_id,omitempty"`
+	DueDate     *time.Time `json:"due_date,omitempty"`
 }
 
 // POST /tasks
@@ -62,7 +65,7 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		api.WriteError(w, http.StatusBadRequest, "agency_id is required")
 		return
 	}
-	task, err := h.svc.Create(r.Context(), req.Title, req.Priority, req.AgencyID)
+	task, err := h.svc.Create(r.Context(), req.Title, req.Priority, req.AgencyID, req.Description, req.AssigneeID, req.DueDate)
 	if err != nil {
 		api.WriteError(w, http.StatusInternalServerError, "failed to create task")
 		return

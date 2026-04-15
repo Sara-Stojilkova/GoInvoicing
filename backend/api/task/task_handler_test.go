@@ -30,7 +30,7 @@ func withChiParam(r *http.Request, key, val string) *http.Request {
 
 func mustCreateTask(t *testing.T, svc *services.TaskService, agencyID uuid.UUID) *domain.Task {
 	t.Helper()
-	task, err := svc.Create(context.Background(), "Fix bug", "high", agencyID)
+	task, err := svc.Create(context.Background(), "Fix bug", "high", agencyID, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("setup Create: %v", err)
 	}
@@ -125,12 +125,12 @@ func TestTaskHandlerCreate(t *testing.T) {
 		body       string
 		wantStatus int
 	}{
-		{"valid request",         validBody,                                                        http.StatusCreated},
-		{"malformed json",        `{bad json}`,                                                     http.StatusBadRequest},
-		{"missing title",         fmt.Sprintf(`{"priority":"high","agency_id":%q}`, agencyID),     http.StatusBadRequest},
-		{"missing priority",      fmt.Sprintf(`{"title":"Fix bug","agency_id":%q}`, agencyID),     http.StatusBadRequest},
-		{"missing agency_id",     `{"title":"Fix bug","priority":"high"}`,                          http.StatusBadRequest},
-		{"invalid agency_id uuid",`{"title":"Fix bug","priority":"high","agency_id":"bad"}`,       http.StatusBadRequest},
+		{"valid request", validBody, http.StatusCreated},
+		{"malformed json", `{bad json}`, http.StatusBadRequest},
+		{"missing title", fmt.Sprintf(`{"priority":"high","agency_id":%q}`, agencyID), http.StatusBadRequest},
+		{"missing priority", fmt.Sprintf(`{"title":"Fix bug","agency_id":%q}`, agencyID), http.StatusBadRequest},
+		{"missing agency_id", `{"title":"Fix bug","priority":"high"}`, http.StatusBadRequest},
+		{"invalid agency_id uuid", `{"title":"Fix bug","priority":"high","agency_id":"bad"}`, http.StatusBadRequest},
 	}
 
 	for _, tt := range tests {
