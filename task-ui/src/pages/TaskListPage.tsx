@@ -63,3 +63,5 @@ export function TaskListPage({ agencyId }: { agencyId: string }) {
     </div>
   );
 }
+
+export default TaskListPage;
