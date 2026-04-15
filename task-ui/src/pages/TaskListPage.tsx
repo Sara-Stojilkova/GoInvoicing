@@ -2,9 +2,8 @@ import { useState, useMemo } from "react";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useTasks } from "../hooks/useTasks";
 import { TaskRow } from "../component/TaskRow";
-import type { Task } from "../types/api";
-
-type StatusFilter = "all" | Task["status"];
+import { SummaryCards } from "../component/SummaryCards";
+import type { StatusFilter } from "../component/SummaryCards";
 
 export function TaskListPage({ agencyId }: { agencyId: string }) {
   const { data: tasks, isLoading, isError, error, refetch } = useTasks(agencyId);
@@ -40,20 +39,11 @@ export function TaskListPage({ agencyId }: { agencyId: string }) {
 
   return (
     <div>
-      <div className="task-filters">
-        <label htmlFor="status-filter" className="create-form__label">Status</label>
-        <select
-          id="status-filter"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="create-form__select"
-        >
-          <option value="all">All</option>
-          <option value="todo">Todo</option>
-          <option value="in_progress">In Progress</option>
-          <option value="done">Done</option>
-        </select>
-      </div>
+      <SummaryCards
+        tasks={tasks ?? []}
+        activeFilter={statusFilter}
+        onFilterChange={setStatusFilter}
+      />
 
       {visible.length === 0 ? (
         <p>No tasks found.</p>
