@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useCreateTask } from "../hooks/useTasks";
+import { useUsers } from "../hooks/useUsers";
 
 export function CreateTaskForm({ agencyId }: { agencyId: string }) {
   const { mutate, isPending, isError, error } = useCreateTask(agencyId);
+  const { data: users, isLoading: usersLoading } = useUsers(agencyId);
 
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("medium");
@@ -64,8 +66,13 @@ export function CreateTaskForm({ agencyId }: { agencyId: string }) {
       </label>
 
       <label>
-        Assignee ID 
-        <input name="assignee_id" value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)} />
+        Assignee
+        <select name="assignee_id" value={assigneeId} disabled={usersLoading} onChange={(e) => setAssigneeId(e.target.value)} >
+          <option value="">Unassigned</option>
+          {(users ?? []).map((user) => (
+            <option key={user.id} value={user.id}>{user.name}</option>
+          ))}
+        </select>
       </label>
 
       <label>
