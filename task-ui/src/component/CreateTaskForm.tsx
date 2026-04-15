@@ -1,40 +1,37 @@
-import { useRef } from "react";
+import { useState } from "react";
 import { useCreateTask } from "../hooks/useTasks";
 
 export function CreateTaskForm({ agencyId }: { agencyId: string }) {
   const { mutate, isPending, isError, error } = useCreateTask(agencyId);
 
-  const titleRef = useRef<HTMLInputElement>(null);
-  const priorityRef = useRef<HTMLSelectElement>(null);
+  const [title, setTitle] = useState("");
+  const [priority, setPriority] = useState("medium");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const title = titleRef.current?.value || "";
-    const priority = priorityRef.current?.value || "";
 
     if (!title.trim()) return;
 
     mutate({
       title,
       priority,
-      agency_id: agencyId, // ✅ REQUIRED here
+      agency_id: agencyId,
     });
 
-    if (titleRef.current) titleRef.current.value = "";
-    if (priorityRef.current) priorityRef.current.value = "medium";
+    setTitle("");
+    setPriority("medium");
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <label>
         Title
-        <input ref={titleRef} name="title" />
+        <input name="title" value={title} onChange={(e) => setTitle(e.target.value)}/>
       </label>
 
       <label>
         Priority
-        <select ref={priorityRef} name="priority" defaultValue="medium">
+        <select name="priority" value={priority} defaultValue="medium" onChange={(e) => setPriority(e.target.value)}>
           <option value="low">low</option>
           <option value="medium">medium</option>
           <option value="high">high</option>
