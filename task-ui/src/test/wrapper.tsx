@@ -15,6 +15,12 @@ export function createWrapper() {
   };
 }
 
+export function createRouterWrapper() {
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return <MemoryRouter>{children}</MemoryRouter>;
+  };
+}
+
 export function createPageWrapper() {
   const queryClient = createTestQueryClient();
 

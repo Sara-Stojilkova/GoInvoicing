@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi , beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { TaskRow } from "./TaskRow.tsx";
+import { createRouterWrapper } from "../test/wrapper";
 import type { Task } from "../types/api";
 
 const task: Task = {
@@ -34,9 +34,8 @@ beforeEach(() => {
 
 function renderRow() {
   return render(
-    <MemoryRouter>
-      <table><tbody><tr><TaskRow task={task} /></tr></tbody></table>
-    </MemoryRouter>
+    <table><tbody><tr><TaskRow task={task} /></tr></tbody></table>,
+    { wrapper: createRouterWrapper() }
   );
 }
 
