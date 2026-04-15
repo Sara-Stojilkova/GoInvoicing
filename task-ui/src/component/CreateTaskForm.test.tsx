@@ -27,6 +27,9 @@ describe("CreateTaskForm", () => {
     expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/priority/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /create/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/assignee id/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/due date/i)).toBeInTheDocument();
   });
 
   it("does not submit when required fields are empty", () => {
@@ -80,18 +83,38 @@ describe("CreateTaskForm", () => {
   });
 
   it("shows validation error when title is empty", () => {
-  render(<CreateTaskForm agencyId="a1" />);
-  fireEvent.click(screen.getByRole("button", { name: /create/i }));
-  expect(screen.getByText(/title is required/i)).toBeInTheDocument();
-  expect(mutate).not.toHaveBeenCalled;
+    render(<CreateTaskForm agencyId="a1" />);
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+    expect(screen.getByText(/title is required/i)).toBeInTheDocument();
+    expect(mutate).not.toHaveBeenCalled();
   });
 
   it("clears validation error when input becomes valid", () => {
-  render(<CreateTaskForm agencyId="a1" />);
-  fireEvent.click(screen.getByRole("button", { name: /create/i }));
-  expect(screen.getByText(/title is required/i)).toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "New task" }, });
-  fireEvent.click(screen.getByRole("button", { name: /create/i }));
-  expect(screen.queryByText(/title is required/i)).not.toBeInTheDocument();
+    render(<CreateTaskForm agencyId="a1" />);
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+    expect(screen.getByText(/title is required/i)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "New task" }, });
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+    expect(screen.queryByText(/title is required/i)).not.toBeInTheDocument();
+  });
+
+  it("includes optional fields when provided", () => {
+    render(<CreateTaskForm agencyId="a1" />);
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "New task" }, });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "test desc" }, });
+    fireEvent.change(screen.getByLabelText(/assignee id/i), { target: { value: "user-1" }, });
+    fireEvent.change(screen.getByLabelText(/due date/i), { target: { value: "2026-01-01" }, });
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+    expect(mutate).toHaveBeenCalledWith(
+    {
+      title: "New task",
+      priority: "medium",
+      agency_id: "a1",
+      description: "test desc",
+      assignee_id: "user-1",
+      due_date: "2026-01-01",
+    },
+      expect.any(Object)
+    );
   });
 });
