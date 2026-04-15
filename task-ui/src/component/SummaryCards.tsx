@@ -3,11 +3,11 @@ import type { Task } from "../types/api";
 
 export type StatusFilter = "all" | Task["status"];
 
-const CARDS: { label: string; value: StatusFilter }[] = [
-  { label: "All",         value: "all" },
-  { label: "Todo",        value: "todo" },
-  { label: "In Progress", value: "in_progress" },
-  { label: "Done",        value: "done" },
+const CARDS: { label: string; value: StatusFilter; modifier: string }[] = [
+  { label: "All",         value: "all",         modifier: "summary-card--all" },
+  { label: "Todo",        value: "todo",        modifier: "summary-card--todo" },
+  { label: "In Progress", value: "in_progress", modifier: "summary-card--in-progress" },
+  { label: "Done",        value: "done",        modifier: "summary-card--done" },
 ];
 
 export function SummaryCards({ tasks, activeFilter, onFilterChange }: {
@@ -24,10 +24,10 @@ export function SummaryCards({ tasks, activeFilter, onFilterChange }: {
 
   return (
     <div className="summary-cards">
-      {CARDS.map(({ label, value }) => (
+      {CARDS.map(({ label, value, modifier }) => (
         <button
           key={value}
-          className={`summary-card${activeFilter === value ? " summary-card--active" : ""}`}
+          className={`summary-card ${modifier}${activeFilter === value ? " summary-card--active" : ""}`}
           aria-pressed={activeFilter === value}
           onClick={() => onFilterChange(value)}
         >
