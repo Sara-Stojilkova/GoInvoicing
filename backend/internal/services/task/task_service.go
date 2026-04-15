@@ -20,14 +20,26 @@ func NewTaskService(repo repositories.TaskRepository) *TaskService {
 	return &TaskService{repo: repo}
 }
 
-func (s *TaskService) Create(ctx context.Context, title, priority string, agencyID uuid.UUID) (*domain.Task, error) {
+func (s *TaskService) Create(
+	ctx context.Context,
+	title string,
+	priority string,
+	agencyID uuid.UUID,
+	description *string,
+	assigneeID *uuid.UUID,
+	dueDate *time.Time,
+) (*domain.Task, error) {
 	task := &domain.Task{
-		ID:        uuid.New(),
-		Title:     title,
-		Priority:  priority,
-		AgencyID:  agencyID,
-		Status:    "todo",
-		CreatedAt: time.Now(),
+		ID:          uuid.New(),
+		Title:       title,
+		Priority:    priority,
+		AgencyID:    agencyID,
+		Description: description,
+		AssigneeID:  assigneeID,
+		DueDate:     dueDate,
+		Status:      "todo",
+		CreatedAt:   time.Now(),
+		CompletedAt: nil,
 	}
 	if err := s.repo.Create(ctx, task); err != nil {
 		return nil, err
