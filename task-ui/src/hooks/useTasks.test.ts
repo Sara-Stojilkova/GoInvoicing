@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import { useTasks, useCreateTask, useCompleteTask, useTask } from "./useTasks";
+import { createTestQueryClient } from "../test/testQueryClient";
+import { createWrapper } from "../test/wrapper";
 import * as tasksApi from "../api/tasks";
 import type { Task } from "../types/api";
 
@@ -38,17 +40,10 @@ const newTask: Task = {
 };
 
 function makeWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
+  const queryClient = createTestQueryClient({ gcTime: Infinity });
   const Wrapper = ({ children }: { children: React.ReactNode }) =>
     createElement(QueryClientProvider, { client: queryClient }, children);
   return { queryClient, Wrapper };
-}
-
-// kept for useTasks tests which don't need access to the queryClient
-function wrapper({ children }: { children: React.ReactNode }) {
-  return makeWrapper().Wrapper({ children });
 }
 
 beforeEach(() => {
@@ -59,7 +54,7 @@ describe("useTasks", () => {
   it("returns data from listTasks on success", async () => {
     vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
 
-    const { result } = renderHook(() => useTasks(agencyId), { wrapper });
+    const { result } = renderHook(() => useTasks(agencyId), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -69,7 +64,7 @@ describe("useTasks", () => {
   it("calls listTasks with the given agencyId", async () => {
     const spy = vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
 
-    const { result } = renderHook(() => useTasks(agencyId), { wrapper });
+    const { result } = renderHook(() => useTasks(agencyId), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -79,7 +74,7 @@ describe("useTasks", () => {
   it("is in a loading state initially", () => {
     vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
 
-    const { result } = renderHook(() => useTasks(agencyId), { wrapper });
+    const { result } = renderHook(() => useTasks(agencyId), { wrapper: createWrapper() });
 
     expect(result.current.isLoading).toBe(true);
     expect(result.current.data).toBeUndefined();
@@ -88,7 +83,7 @@ describe("useTasks", () => {
   it("sets isError when listTasks rejects", async () => {
     vi.spyOn(tasksApi, "listTasks").mockRejectedValue(new Error("network error"));
 
-    const { result } = renderHook(() => useTasks(agencyId), { wrapper });
+    const { result } = renderHook(() => useTasks(agencyId), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
@@ -219,7 +214,7 @@ describe("useTask", () => {
   it("returns the task when given a valid id", async () => {
     vi.spyOn(tasksApi, "getTask").mockResolvedValue(tasks[0]);
 
-    const { result } = renderHook(() => useTask(tasks[0].id, agencyId), { wrapper });
+    const { result } = renderHook(() => useTask(tasks[0].id, agencyId), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.data).toEqual(tasks[0]);
@@ -228,7 +223,7 @@ describe("useTask", () => {
   it("calls getTask with the task id and agency id", async () => {
     const spy = vi.spyOn(tasksApi, "getTask").mockResolvedValue(tasks[0]);
 
-    const { result } = renderHook(() => useTask(tasks[0].id, agencyId), { wrapper });
+    const { result } = renderHook(() => useTask(tasks[0].id, agencyId), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(spy).toHaveBeenCalledWith(tasks[0].id, agencyId);
@@ -237,7 +232,7 @@ describe("useTask", () => {
   it("does not fetch when taskId is null", () => {
     const spy = vi.spyOn(tasksApi, "getTask").mockResolvedValue(tasks[0]);
 
-    const { result } = renderHook(() => useTask(null, agencyId), { wrapper });
+    const { result } = renderHook(() => useTask(null, agencyId), { wrapper: createWrapper() });
 
     expect(spy).not.toHaveBeenCalled();
     expect(result.current.isLoading).toBe(false);
@@ -264,7 +259,7 @@ describe("useTask", () => {
   it("sets isError when getTask rejects", async () => {
     vi.spyOn(tasksApi, "getTask").mockRejectedValue(new Error("not found"));
 
-    const { result } = renderHook(() => useTask(tasks[0].id, agencyId), { wrapper });
+    const { result } = renderHook(() => useTask(tasks[0].id, agencyId), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
