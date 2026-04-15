@@ -9,10 +9,23 @@ export function getTask(id: string, agencyId: string): Promise<Task> {
   return request<Task>(`/api/tasks/${id}?agency_id=${agencyId}`);
 }
 
-export function createTask(data: { title: string; priority: string; agency_id: string }): Promise<Task> {
+export function createTask(data: { 
+  title: string; 
+  priority: string; 
+  agency_id: string; 
+  description?: string;
+  assignee_id?: string;
+  due_date?: string;
+}): Promise<Task> {
+  const cleaned = Object.fromEntries(
+    Object.entries(data).filter(([ , v]) => v != undefined)
+  );
+  if (cleaned.due_date) {
+    cleaned.due_date = new Date(cleaned.due_date as string).toISOString();
+  }
   return request<Task>("/api/tasks", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify(cleaned),
   });
 }
 
