@@ -20,6 +20,9 @@ export function createTask(data: {
   const cleaned = Object.fromEntries(
     Object.entries(data).filter(([ , v]) => v != undefined)
   );
+  if (cleaned.due_date) {
+    cleaned.due_date = new Date(cleaned.due_date as string).toISOString();
+  }
   return request<Task>("/api/tasks", {
     method: "POST",
     body: JSON.stringify(cleaned),

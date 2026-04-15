@@ -136,10 +136,10 @@ describe("createTask", () => {
       new Response(JSON.stringify(task), { status: 201, headers: { "Content-Type": "application/json" }, })
     );
     vi.stubGlobal("fetch", fetchMock);
-    await createTask({ ...payload, description: "test desc", due_date: "2026-01-01T00:00:00Z", });
+    await createTask({ ...payload, description: "test desc", due_date: "2026-01-01", });
     const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
     expect(body.description).toBe("test desc");
-    expect(body.due_date).toBe("2026-01-01T00:00:00Z");
+    expect(body.due_date).toBe("2026-01-01T00:00:00.000Z");
   });
 });
 
