@@ -1,6 +1,7 @@
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useTasks } from "../hooks/useTasks";
 import { TaskRow } from "../component/TaskRow";
+import { CreateTaskForm } from "../component/CreateTaskForm";
 
 export function TaskListPage({ agencyId }: { agencyId: string }) {
   const { data: tasks, isLoading, isError, error, refetch } = useTasks(agencyId);
@@ -27,18 +28,26 @@ export function TaskListPage({ agencyId }: { agencyId: string }) {
   }
 
   if (!tasks || tasks.length === 0) {
-    return <p>No tasks found.</p>;
+    return (
+      <>
+        <p>No tasks found for this agency.</p>
+        <CreateTaskForm agencyId={agencyId} />
+      </>
+    );
   }
 
   return (
-    <table className="task-table">
-      <tbody>
-        {tasks.map((task) => (
-          <tr key={task.id}>
-            <TaskRow task={task} />
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <>
+      <table className="task-table">
+        <tbody>
+          {tasks.map((task) => (
+            <tr key={task.id}>
+              <TaskRow task={task} />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <CreateTaskForm agencyId={agencyId} />
+    </>
   );
 }
