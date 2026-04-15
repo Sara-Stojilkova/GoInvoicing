@@ -2,8 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { createPageWrapper } from "../test/wrapper";
 import { TaskListPage } from "./TaskListPage";
 import * as tasksApi from "../api/tasks";
 import type { Task } from "../types/api";
@@ -50,16 +49,7 @@ const tasks: Task[] = [
 ];
 
 function renderPage(agencyId: string) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  return render(
-    <MemoryRouter>
-      <QueryClientProvider client={queryClient}>
-        <TaskListPage agencyId={agencyId} />
-      </QueryClientProvider>
-    </MemoryRouter>
-  );
+  return render(<TaskListPage agencyId={agencyId} />, { wrapper: createPageWrapper() });
 }
 
 beforeEach(() => {
