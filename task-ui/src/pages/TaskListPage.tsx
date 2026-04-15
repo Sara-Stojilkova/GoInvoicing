@@ -4,6 +4,7 @@ import { useTasks } from "../hooks/useTasks";
 import { TaskRow } from "../component/TaskRow";
 import { SummaryCards } from "../component/SummaryCards";
 import type { StatusFilter } from "../component/SummaryCards";
+import { CreateTaskForm } from "../component/CreateTaskForm";
 
 export function TaskListPage({ agencyId }: { agencyId: string }) {
   const { data: tasks, isLoading, isError, error, refetch } = useTasks(agencyId);
@@ -58,6 +59,7 @@ export function TaskListPage({ agencyId }: { agencyId: string }) {
           </tbody>
         </table>
       )}
+      <CreateTaskForm agencyId={agencyId} />
     </div>
   );
 }
