@@ -170,9 +170,12 @@ describe("TaskListPage", () => {
       await waitFor(() => screen.getByText("Fix login bug"));
     }
 
-    it("renders a status filter control", async () => {
+    it("renders summary cards as filter controls", async () => {
       await renderWithTasks();
-      expect(screen.getByRole("combobox", { name: /status/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /all/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /todo/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /in.progress/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /done/i })).toBeInTheDocument();
     });
 
     it("defaults to showing all tasks", async () => {
@@ -182,35 +185,35 @@ describe("TaskListPage", () => {
       expect(screen.getByText("Deploy to production")).toBeInTheDocument();
     });
 
-    it("shows only todo tasks when todo is selected", async () => {
+    it("shows only todo tasks when the todo card is clicked", async () => {
       await renderWithTasks();
-      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "todo");
+      await userEvent.click(screen.getByRole("button", { name: /todo/i }));
       expect(screen.getByText("Fix login bug")).toBeInTheDocument();
       expect(screen.queryByText("Write docs")).not.toBeInTheDocument();
       expect(screen.queryByText("Deploy to production")).not.toBeInTheDocument();
     });
 
-    it("shows only in-progress tasks when in_progress is selected", async () => {
+    it("shows only in-progress tasks when the in-progress card is clicked", async () => {
       await renderWithTasks();
-      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "in_progress");
+      await userEvent.click(screen.getByRole("button", { name: /in.progress/i }));
       expect(screen.queryByText("Fix login bug")).not.toBeInTheDocument();
       expect(screen.getByText("Write docs")).toBeInTheDocument();
       expect(screen.queryByText("Deploy to production")).not.toBeInTheDocument();
     });
 
-    it("shows only done tasks when done is selected", async () => {
+    it("shows only done tasks when the done card is clicked", async () => {
       await renderWithTasks();
-      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "done");
+      await userEvent.click(screen.getByRole("button", { name: /done/i }));
       expect(screen.queryByText("Fix login bug")).not.toBeInTheDocument();
       expect(screen.queryByText("Write docs")).not.toBeInTheDocument();
       expect(screen.getByText("Deploy to production")).toBeInTheDocument();
     });
 
-    it("shows all tasks again when filter is reset to all", async () => {
+    it("shows all tasks again when the all card is clicked", async () => {
       await renderWithTasks();
-      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "todo");
+      await userEvent.click(screen.getByRole("button", { name: /todo/i }));
       expect(screen.queryByText("Write docs")).not.toBeInTheDocument();
-      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "all");
+      await userEvent.click(screen.getByRole("button", { name: /all/i }));
       expect(screen.getByText("Fix login bug")).toBeInTheDocument();
       expect(screen.getByText("Write docs")).toBeInTheDocument();
       expect(screen.getByText("Deploy to production")).toBeInTheDocument();
@@ -220,7 +223,7 @@ describe("TaskListPage", () => {
       vi.spyOn(tasksApi, "listTasks").mockResolvedValue([tasks[0]]);
       renderPage(agencyId);
       await waitFor(() => screen.getByText("Fix login bug"));
-      await userEvent.selectOptions(screen.getByRole("combobox", { name: /status/i }), "done");
+      await userEvent.click(screen.getByRole("button", { name: /done/i }));
       expect(screen.getByText(/no tasks/i)).toBeInTheDocument();
     });
   });
