@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor} from "@testing-library/react";
 import { CreateTaskForm } from "./CreateTaskForm";
 
-const mutate = vi.fn();
+const mutate = vi.fn((_, options) => { options?.onSuccess?.(); });
 const mockUseCreateTask = vi.fn();
 
 vi.mock("../hooks/useTasks", () => ({
@@ -44,7 +44,9 @@ describe("CreateTaskForm", () => {
       title: "New task",
       priority: "high",
       agency_id: "a1",
-    });
+      },
+      expect.any(Object)
+    );
   });
 
   it("disables submit while pending", () => {
@@ -64,15 +66,17 @@ describe("CreateTaskForm", () => {
     expect(screen.getByText(/failed/i)).toBeInTheDocument();
   });
 
-  it("resets form after submit", () => {
+  it("resets form after submit success", async () => {
     render(<CreateTaskForm agencyId="a1" />);
     const title = screen.getByLabelText(/title/i);
     const priority = screen.getByLabelText(/priority/i);
     fireEvent.change(title, { target: { value: "New task" } });
     fireEvent.change(priority, { target: { value: "high" } });
     fireEvent.click(screen.getByRole("button", { name: /create/i }));
-    expect(title).toHaveValue("");
-    expect(priority).toHaveValue("medium");
+    await waitFor(() => { 
+      expect(title).toHaveValue("");
+      expect(priority).toHaveValue("medium"); 
+    });
   });
 
   it("shows validation error when title is empty", () => {
