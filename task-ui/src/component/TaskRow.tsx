@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { Task } from "../types/api";
 import { StatusBadge } from "./StatusBadge";
 import { useCompleteTask } from "../hooks/useTasks";
@@ -9,7 +10,7 @@ export function TaskRow({ task }: { task: Task }) {
 
   return (
     <>
-      <td>{task.title}</td>
+      <td><Link to={`/tasks/${task.id}`}>{task.title}</Link></td>
       <td><StatusBadge status={task.status} /></td>
       <td>{task.priority}</td>
       <td>
