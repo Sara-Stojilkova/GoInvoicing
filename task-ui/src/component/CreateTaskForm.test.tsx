@@ -74,4 +74,20 @@ describe("CreateTaskForm", () => {
     expect(title).toHaveValue("");
     expect(priority).toHaveValue("medium");
   });
+
+  it("shows validation error when title is empty", () => {
+  render(<CreateTaskForm agencyId="a1" />);
+  fireEvent.click(screen.getByRole("button", { name: /create/i }));
+  expect(screen.getByText(/title is required/i)).toBeInTheDocument();
+  expect(mutate).not.toHaveBeenCalled;
+  });
+
+  it("clears validation error when input becomes valid", () => {
+  render(<CreateTaskForm agencyId="a1" />);
+  fireEvent.click(screen.getByRole("button", { name: /create/i }));
+  expect(screen.getByText(/title is required/i)).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "New task" }, });
+  fireEvent.click(screen.getByRole("button", { name: /create/i }));
+  expect(screen.queryByText(/title is required/i)).not.toBeInTheDocument();
+  });
 });
