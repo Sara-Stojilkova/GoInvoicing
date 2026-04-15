@@ -1,6 +1,6 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, type QueryObserverOptions } from "@tanstack/react-query";
 
-export function createTestQueryClient() {
+export function createTestQueryClient(queryOverrides?: Partial<QueryObserverOptions>) {
   return new QueryClient({
     defaultOptions: {
       queries: {
@@ -8,6 +8,7 @@ export function createTestQueryClient() {
         staleTime: 0,
         gcTime: 0,
         refetchOnWindowFocus: false,
+        ...queryOverrides,
       },
       mutations: {
         retry: false,
