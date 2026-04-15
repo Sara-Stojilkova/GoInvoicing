@@ -109,3 +109,110 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* ── Task table ─────────────────────────────────────── */
+
+.page {
+  padding: 0 32px 48px;
+  text-align: left;
+}
+
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 15px;
+}
+
+.task-table thead tr {
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.task-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.task-table td {
+  padding: 14px 16px;
+  color: var(--text-h);
+  border-top: 1px solid var(--border);
+}
+
+.task-table tbody tr:hover {
+  background: var(--accent-bg);
+}
+
+.task-table .col-amount {
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.task-table .col-action {
+  text-align: right;
+}
+
+/* ── Status badges ─────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: capitalize;
+}
+
+.badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.badge-green { color: #16a34a; background: #dcfce7; }
+.badge-red   { color: #dc2626; background: #fee2e2; }
+.badge-yellow { color: #d97706; background: #fef3c7; }
+.badge-gray  { color: #6b7280; background: #f3f4f6; }
+
+@media (prefers-color-scheme: dark) {
+  .badge-green { color: #4ade80; background: rgba(74, 222, 128, 0.15); }
+  .badge-red   { color: #f87171; background: rgba(248, 113, 113, 0.15); }
+  .badge-yellow { color: #fbbf24; background: rgba(251, 191, 36, 0.15); }
+  .badge-gray  { color: #9ca3af; background: rgba(156, 163, 175, 0.15); }
+}
+
+/* ── Complete button ────────────────────────────────────────── */
+
+.btn-complete {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover:not(:disabled) {
+    box-shadow: var(--shadow);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
