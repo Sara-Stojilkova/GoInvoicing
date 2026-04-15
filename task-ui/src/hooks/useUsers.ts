@@ -1,5 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { listUsers } from "../api/users";
 
-export function useUsers(_agencyId: string): ReturnType<typeof useQuery> {
-  throw new Error("not implemented");
+export function useUsers(agencyId: string) {
+  return useQuery({
+    queryKey: ["users", agencyId],
+    queryFn: () => listUsers(agencyId),
+  });
 }
