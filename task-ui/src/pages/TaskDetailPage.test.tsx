@@ -2,13 +2,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createElement } from "react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { TaskDetailPage } from "./TaskDetailPage";
 import * as tasksApi from "../api/tasks";
 import type { Task } from "../types/api";
 
-const agencyId = "a1b2c3d4-0000-0000-0000-000000000001";
-const taskId   = "c3d4e5f6-0000-0000-0000-000000000003";
+const agencyId   = "a1b2c3d4-0000-0000-0000-000000000001";
+const taskId     = "c3d4e5f6-0000-0000-0000-000000000003";
 const assigneeId = "b2c3d4e5-0000-0000-0000-000000000002";
 
 const fullTask: Task = {
@@ -43,14 +43,18 @@ const completedTask: Task = {
   completed_at: "2024-01-20T14:30:00Z",
 };
 
-function renderPage(task = fullTask) {
+function renderPage(id = taskId) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
-    createElement(QueryClientProvider, { client: queryClient },
-      createElement(TaskDetailPage, { taskId: task.id, agencyId })
-    )
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[`/tasks/${id}`]}>
+        <Routes>
+          <Route path="/tasks/:taskId" element={<TaskDetailPage agencyId={agencyId} />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
@@ -73,22 +77,47 @@ describe("TaskDetailPage", () => {
 
   describe("error state", () => {
     it("renders an error message when the request fails", async () => {
-      vi.spyOn(tasksApi, "getTask").mockRejectedValue(new Error("not found"));
+      vi.spyOn(tasksApi, "getTask").mockRejectedValue(new Error("network error"));
       renderPage();
       await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
     });
 
-    it("shows a 404 message when the task is not found", async () => {
-      vi.spyOn(tasksApi, "getTask").mockRejectedValue(Object.assign(new Error("not found"), { status: 404 }));
+    it("shows a not found message on 404", async () => {
+      vi.spyOn(tasksApi, "getTask").mockRejectedValue(
+        Object.assign(new Error("not found"), { status: 404 })
+      );
       renderPage();
       await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
       expect(screen.getByText(/not found/i)).toBeInTheDocument();
+    });
+
+    it("shows a back link on the error state", async () => {
+      vi.spyOn(tasksApi, "getTask").mockRejectedValue(new Error("network error"));
+      renderPage();
+      await waitFor(() => screen.getByRole("alert"));
+      expect(screen.getByRole("link", { name: /back/i })).toBeInTheDocument();
+    });
+  });
+
+  describe("navigation", () => {
+    it("renders a back link to the list", async () => {
+      vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByRole("link", { name: /back/i })).toHaveAttribute("href", "/");
     });
   });
 
   describe("success state — required fields", () => {
     beforeEach(() => {
       vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
+    });
+
+    it("reads the task id from the URL and fetches the right task", async () => {
+      const spy = vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
+      renderPage(taskId);
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(spy).toHaveBeenCalledWith(taskId, agencyId);
     });
 
     it("renders the task title", async () => {
@@ -137,7 +166,7 @@ describe("TaskDetailPage", () => {
 
     it("does not render a description section when description is null", async () => {
       vi.spyOn(tasksApi, "getTask").mockResolvedValue(minimalTask);
-      renderPage(minimalTask);
+      renderPage();
       await waitFor(() => screen.getByText("Minimal task"));
       expect(screen.queryByText(/description/i)).not.toBeInTheDocument();
     });
@@ -151,7 +180,7 @@ describe("TaskDetailPage", () => {
 
     it("shows unassigned when assignee_id is null", async () => {
       vi.spyOn(tasksApi, "getTask").mockResolvedValue(minimalTask);
-      renderPage(minimalTask);
+      renderPage();
       await waitFor(() => screen.getByText("Minimal task"));
       expect(screen.getByText(/unassigned/i)).toBeInTheDocument();
     });
@@ -165,7 +194,7 @@ describe("TaskDetailPage", () => {
 
     it("shows no due date when due_date is null", async () => {
       vi.spyOn(tasksApi, "getTask").mockResolvedValue(minimalTask);
-      renderPage(minimalTask);
+      renderPage();
       await waitFor(() => screen.getByText("Minimal task"));
       expect(screen.getByText(/no due date/i)).toBeInTheDocument();
     });
@@ -177,7 +206,7 @@ describe("TaskDetailPage", () => {
       expect(screen.getByText(/jan.*20.*2024|2024.*01.*20/i)).toBeInTheDocument();
     });
 
-    it("does not render a completed_at section when task is not done", async () => {
+    it("does not render a completed section when task is not done", async () => {
       vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
