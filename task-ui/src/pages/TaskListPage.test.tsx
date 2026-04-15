@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createElement } from "react";
+import { MemoryRouter } from "react-router-dom";
 import { TaskListPage } from "./TaskListPage";
 import * as tasksApi from "../api/tasks";
 import type { Task } from "../types/api";
@@ -54,9 +54,11 @@ function renderPage(agencyId: string) {
     defaultOptions: { queries: { retry: false } },
   });
   return render(
-    createElement(QueryClientProvider, { client: queryClient },
-      createElement(TaskListPage, { agencyId })
-    )
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <TaskListPage agencyId={agencyId} />
+      </QueryClientProvider>
+    </MemoryRouter>
   );
 }
 
