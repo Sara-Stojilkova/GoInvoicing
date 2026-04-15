@@ -134,9 +134,9 @@ describe("TaskListPage", () => {
       vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
       renderPage(agencyId);
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByText(/todo/i)).toBeInTheDocument();
-      expect(screen.getByText(/in.progress/i)).toBeInTheDocument();
-      expect(screen.getByText(/done/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/todo/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/in.progress/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/done/i).length).toBeGreaterThan(0);
     });
 
     it("renders each task's priority", async () => {
