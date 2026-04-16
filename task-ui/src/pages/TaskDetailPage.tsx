@@ -4,6 +4,7 @@ import { useTask } from "../hooks/useTasks";
 import { useUsers } from "../hooks/useUsers";
 import { useAgency } from "../hooks/useAgency";
 import { StatusBadge } from "../component/StatusBadge";
+import { PriorityBadge } from "../component/PriorityBadge";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -59,7 +60,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
       <h1>{task.title}</h1>
       <dl className="detail-grid">
         <Field label="Status"><StatusBadge status={task.status} /></Field>
-        <Field label="Priority">{task.priority}</Field>
+        <Field label="Priority"><PriorityBadge priority={task.priority} /></Field>
         <Field label="ID">{task.id}</Field>
         <Field label="Agency">{agencyName}</Field>
         <Field label="Created">{formatDate(task.created_at)}</Field>
