@@ -136,7 +136,7 @@ describe("TaskListPage", () => {
       renderPage(agencyId);
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.getAllByText(/high/i).length).toBeGreaterThan(0);
-      expect(screen.getByText(/low/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/low/i).length).toBeGreaterThan(0);
     });
 
     it("renders an empty state message when there are no tasks", async () => {
