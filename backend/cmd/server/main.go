@@ -14,6 +14,7 @@ import (
 	taskAPI "backend/api/task"
 	userAPI "backend/api/user"
 	"backend/internal/repositories/memory"
+	seed "backend/internal/seed"
 	agencyServices "backend/internal/services/agency"
 	invoiceServices "backend/internal/services/invoice"
 	taskServices "backend/internal/services/task"
@@ -51,6 +52,19 @@ func main() {
 	taskRepo := memory.NewTaskRepo()
 	userRepo := memory.NewUserRepo()
 	agencyRepo := memory.NewAgencyRepo()
+
+	// Seed in-memory data
+	seedData := seed.Generate()
+	ctx := context.Background()
+	for i := range seedData.Agencies {
+		agencyRepo.Create(ctx, &seedData.Agencies[i])
+	}
+	for i := range seedData.Users {
+		userRepo.Create(ctx, &seedData.Users[i])
+	}
+	for i := range seedData.Tasks {
+		taskRepo.Create(ctx, &seedData.Tasks[i])
+	}
 
 	// Services
 	invoiceSvc := invoiceServices.NewInvoiceService(invoiceRepo)
