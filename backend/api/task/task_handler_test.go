@@ -333,6 +333,63 @@ func TestTaskHandlerAssign(t *testing.T) {
 	}
 }
 
+// --- Unassign ---
+
+func TestTaskHandlerUnassign(t *testing.T) {
+	agencyA := uuid.New()
+	assigneeID := uuid.New()
+
+	tests := []struct {
+		name       string
+		idStr      func(*services.TaskService) string
+		wantStatus int
+	}{
+		{
+			name:       "invalid task uuid",
+			idStr:      func(*services.TaskService) string { return "not-a-uuid" },
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "task not found",
+			idStr:      func(*services.TaskService) string { return uuid.New().String() },
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name: "success — clears assignee",
+			idStr: func(svc *services.TaskService) string {
+				task := mustCreateTask(t, svc, agencyA)
+				_ = svc.AssignTask(context.Background(), task.ID, assigneeID, agencyA)
+				return task.ID.String()
+			},
+			wantStatus: http.StatusNoContent,
+		},
+		{
+			name: "success — already unassigned",
+			idStr: func(svc *services.TaskService) string {
+				return mustCreateTask(t, svc, agencyA).ID.String()
+			},
+			wantStatus: http.StatusNoContent,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := newTaskService()
+			idStr := tt.idStr(svc)
+			h := NewTaskHandler(svc)
+
+			r := httptest.NewRequest(http.MethodPost, "/api/tasks/"+idStr+"/unassign", nil)
+			r = withChiParam(r, "id", idStr)
+			w := httptest.NewRecorder()
+			h.Unassign(w, r)
+
+			if w.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d (body: %s)", w.Code, tt.wantStatus, w.Body.String())
+			}
+		})
+	}
+}
+
 // --- Complete ---
 
 func TestTaskHandlerComplete(t *testing.T) {

@@ -155,6 +155,65 @@ func TestAssignTask(t *testing.T) {
 	}
 }
 
+func TestUnassignTask(t *testing.T) {
+	agencyID := uuid.New()
+	assigneeID := uuid.New()
+
+	tests := []struct {
+		name    string
+		setup   func(svc *services.TaskService) uuid.UUID
+		wantErr error
+	}{
+		{
+			name: "success — clears assignee",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, &assigneeID, nil)
+				return task.ID
+			},
+			wantErr: nil,
+		},
+		{
+			name: "success — unassigning already unassigned task",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				return task.ID
+			},
+			wantErr: nil,
+		},
+		{
+			name: "not found",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				id := task.ID
+				id[0] ^= 0xFF
+				return id
+			},
+			wantErr: apperrors.ErrNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := newTaskService()
+			taskID := tt.setup(svc)
+			err := svc.UnassignTask(ctx, taskID)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("UnassignTask() error = %v, want %v", err, tt.wantErr)
+			}
+			if err != nil {
+				return
+			}
+			task, err := svc.GetTask(ctx, taskID, agencyID)
+			if err != nil {
+				t.Fatalf("unexpected error fetching task: %v", err)
+			}
+			if task.AssigneeID != nil {
+				t.Errorf("UnassignTask() AssigneeID = %v, want nil", task.AssigneeID)
+			}
+		})
+	}
+}
+
 func TestCompleteTask(t *testing.T) {
 	agencyID := uuid.New()
 
