@@ -29,7 +29,7 @@ export function SummaryCards({ tasks, activeFilter, onFilterChange }: {
           key={value}
           className={`summary-card ${modifier}${activeFilter === value ? " summary-card--active" : ""}`}
           aria-pressed={activeFilter === value}
-          onClick={() => onFilterChange(value)}
+          onClick={() => onFilterChange(activeFilter === value ? "all" : value)}
         >
           <span className="summary-card__count">{counts[value]}</span>
           <span className="summary-card__label">{label}</span>

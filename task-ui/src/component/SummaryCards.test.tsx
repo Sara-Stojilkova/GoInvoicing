@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -78,6 +77,32 @@ describe("SummaryCards", () => {
       const { onFilterChange } = renderCards("todo");
       await userEvent.click(screen.getByRole("button", { name: /all/i }));
       expect(onFilterChange).toHaveBeenCalledWith("all");
+    });
+  });
+
+  describe("toggle behaviour", () => {
+    it("calls onFilterChange with 'all' when the active todo card is clicked again", async () => {
+      const { onFilterChange } = renderCards("todo");
+      await userEvent.click(screen.getByRole("button", { name: /todo/i }));
+      expect(onFilterChange).toHaveBeenCalledWith("all");
+    });
+
+    it("calls onFilterChange with 'all' when the active in-progress card is clicked again", async () => {
+      const { onFilterChange } = renderCards("in_progress");
+      await userEvent.click(screen.getByRole("button", { name: /in.progress/i }));
+      expect(onFilterChange).toHaveBeenCalledWith("all");
+    });
+
+    it("calls onFilterChange with 'all' when the active done card is clicked again", async () => {
+      const { onFilterChange } = renderCards("done");
+      await userEvent.click(screen.getByRole("button", { name: /done/i }));
+      expect(onFilterChange).toHaveBeenCalledWith("all");
+    });
+
+    it("calls onFilterChange with 'todo' when an inactive todo card is clicked", async () => {
+      const { onFilterChange } = renderCards("done");
+      await userEvent.click(screen.getByRole("button", { name: /todo/i }));
+      expect(onFilterChange).toHaveBeenCalledWith("todo");
     });
   });
 

@@ -64,4 +64,3 @@ export function TaskListPage({ agencyId }: { agencyId: string }) {
   );
 }
 
-export default TaskListPage;

@@ -4,7 +4,7 @@ import './App.css'
 
 const AGENCY_ID = "32ea87c0-23b8-4373-9cf9-b5164bd6a675";
 
-const TaskListPage   = lazy(() => import("./pages/TaskListPage"));
+const TaskListPage   = lazy(() => import("./pages/TaskListPage").then(m => ({ default: m.TaskListPage })));
 const TaskDetailPage = lazy(() => import("./pages/TaskDetailPage").then(m => ({ default: m.TaskDetailPage })));
 
 function App() {
