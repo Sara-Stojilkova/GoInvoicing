@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useTask, useCompleteTask } from "../hooks/useTasks";
+import { useTask, useCompleteTask, useAssignTask } from "../hooks/useTasks";
 import { useUsers } from "../hooks/useUsers";
 import { useAgency } from "../hooks/useAgency";
 import { StatusBadge } from "../component/StatusBadge";
@@ -27,6 +27,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   const { data: users } = useUsers(agencyId);
   const { data: agency } = useAgency(agencyId);
   const { mutate: complete, isPending: isCompleting } = useCompleteTask(agencyId);
+  const { mutate: assign } = useAssignTask(agencyId);
 
   if (isLoading) {
     return (
@@ -52,7 +53,6 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
 
   if (!task) return null;
 
-  const assigneeName = users?.find((u) => u.id === task.assignee_id)?.name ?? task.assignee_id;
   const agencyName = agency?.name ?? task.agency_id;
 
   return (
@@ -66,9 +66,20 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
         <Field label="Agency">{agencyName}</Field>
         <Field label="Created">{formatDate(task.created_at)}</Field>
         <Field label="Assignee">
-          {task.assignee_id
-            ? assigneeName
-            : <span className="detail-field__empty">Unassigned</span>}
+          <select
+            id="assignee"
+            aria-label="Assignee"
+            className="create-form__select"
+            value={task.assignee_id ?? ""}
+            onChange={(e) => {
+              assign({ taskId: task.id, assigneeId: e.target.value || null, assigneeAgencyId: agencyId });
+            }}
+          >
+            <option value="">Unassigned</option>
+            {users?.map((u) => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ))}
+          </select>
         </Field>
         <Field label="Due date">
           {task.due_date

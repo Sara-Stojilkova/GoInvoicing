@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listTasks, getTask, createTask, completeTask } from "../api/tasks";
+import { listTasks, getTask, createTask, completeTask, assignTask, unassignTask } from "../api/tasks";
 
 export function useTask(taskId: string | null, agencyId: string) {
   return useQuery({
@@ -23,6 +23,19 @@ export function useCreateTask(agencyId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", agencyId] });
+    },
+  });
+}
+
+export function useAssignTask(agencyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, assigneeId, assigneeAgencyId }: { taskId: string; assigneeId: string | null; assigneeAgencyId: string }) =>
+      assigneeId
+        ? assignTask(taskId, { assignee_id: assigneeId, assignee_agency_id: assigneeAgencyId })
+        : unassignTask(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", agencyId] });
     },

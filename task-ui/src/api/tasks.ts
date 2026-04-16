@@ -36,6 +36,10 @@ export function assignTask(id: string, data: { assignee_id: string; assignee_age
   });
 }
 
+export function unassignTask(id: string): Promise<void> {
+  return request<void>(`/api/tasks/${id}/unassign`, { method: "POST" });
+}
+
 export function completeTask(id: string): Promise<void> {
   return request<void>(`/api/tasks/${id}/complete`, { method: "POST" });
 }
