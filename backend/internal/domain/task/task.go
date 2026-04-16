@@ -51,6 +51,10 @@ func (t *Task) Assign(userID uuid.UUID) {
 	t.AssigneeID = &userID
 }
 
+func (t *Task) Unassign() {
+	t.AssigneeID = nil
+}
+
 func (t *Task) SetInProgress() error {
 	if t.Status == "in_progress" {
 		return fmt.Errorf("task %s: %w", t.ID, apperrors.ErrConflict)

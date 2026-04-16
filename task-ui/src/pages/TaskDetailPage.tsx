@@ -1,7 +1,10 @@
 import { Link, useParams } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useTask } from "../hooks/useTasks";
+import { useTask, useCompleteTask, useAssignTask, useSetInProgress } from "../hooks/useTasks";
+import { useUsers } from "../hooks/useUsers";
+import { useAgency } from "../hooks/useAgency";
 import { StatusBadge } from "../component/StatusBadge";
+import { PriorityBadge } from "../component/PriorityBadge";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -21,6 +24,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   const { taskId = null } = useParams<{ taskId: string }>();
   const { data: task, isLoading, isError, error } = useTask(taskId, agencyId);
+  const { data: users } = useUsers(agencyId);
+  const { data: agency } = useAgency(agencyId);
+  const { mutate: complete } = useCompleteTask(agencyId);
+  const { mutate: setInProgress } = useSetInProgress(agencyId);
+  const { mutate: assign } = useAssignTask(agencyId);
 
   if (isLoading) {
     return (
@@ -34,7 +42,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   if (isError) {
     return (
       <Box role="alert" sx={{ p: 4 }}>
-        <Link to="/" className="back-link">← Back to list</Link>
+        <Link to="/" className="back-link">Back to list</Link>
         <Typography sx={{ fontWeight: 600, mt: 2 }}>
           {(error as { status?: number })?.status === 404
             ? "Task not found."
@@ -46,31 +54,67 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
 
   if (!task) return null;
 
+  const agencyName = agency?.name ?? task.agency_id;
+
   return (
     <div className="page">
-      <Link to="/" className="back-link">← Back to list</Link>
+      <Link to="/" className="back-link">Back to list</Link>
       <h1>{task.title}</h1>
       <dl className="detail-grid">
         <Field label="Status"><StatusBadge status={task.status} /></Field>
-        <Field label="Priority">{task.priority}</Field>
+        <Field label="Priority"><PriorityBadge priority={task.priority} /></Field>
         <Field label="ID">{task.id}</Field>
-        <Field label="Agency">{task.agency_id}</Field>
+        <Field label="Agency">{agencyName}</Field>
         <Field label="Created">{formatDate(task.created_at)}</Field>
         <Field label="Assignee">
-          {task.assignee_id ?? <span className="detail-field__empty">Unassigned</span>}
+          <select
+            id="assignee"
+            aria-label="Assignee"
+            className="create-form__select"
+            value={task.assignee_id ?? ""}
+            onChange={(e) => {
+              assign({ taskId: task.id, assigneeId: e.target.value || null, assigneeAgencyId: agencyId });
+            }}
+          >
+            <option value="">Unassigned</option>
+            {users?.map((u) => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ))}
+          </select>
         </Field>
         <Field label="Due date">
           {task.due_date
             ? formatDate(task.due_date)
             : <span className="detail-field__empty">No due date</span>}
         </Field>
-        {task.completed_at && (
-          <Field label="Completed">{formatDate(task.completed_at)}</Field>
-        )}
-        {task.description && (
-          <Field label="Description">{task.description}</Field>
-        )}
+        <Field label="Completed">
+          {task.completed_at
+            ? formatDate(task.completed_at)
+            : <span className="detail-field__empty">Not completed</span>}
+        </Field>
+        <Field label="Description">
+          {task.description
+            ? task.description
+            : <span className="detail-field__empty">No description</span>}
+        </Field>
       </dl>
+      <div className="detail-actions">
+        <label htmlFor="status-action" className="detail-field__label">Change status</label>
+        <select
+          id="status-action"
+          aria-label="Change status"
+          className="create-form__select detail-actions__select"
+          value=""
+          onChange={(e) => {
+            if (e.target.value === "complete") complete(task.id);
+            if (e.target.value === "in_progress") setInProgress(task.id);
+          }}
+        >
+          <option value="" disabled hidden>Change status…</option>
+          <option value="complete" disabled={task.status === "done"}>Complete</option>
+          <option value="in_progress" disabled={task.status === "in_progress"}>Set In Progress</option>
+        </select>
+      </div>
     </div>
   );
 }

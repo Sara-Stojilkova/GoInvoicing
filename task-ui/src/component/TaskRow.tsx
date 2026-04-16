@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Task } from "../types/api";
 import { StatusBadge } from "./StatusBadge";
+import { PriorityBadge } from "./PriorityBadge";
 import { useCompleteTask } from "../hooks/useTasks";
 
 export function TaskRow({ task }: { task: Task }) {
@@ -12,7 +13,7 @@ export function TaskRow({ task }: { task: Task }) {
     <>
       <td><Link to={`/tasks/${task.id}`}>{task.title}</Link></td>
       <td><StatusBadge status={task.status} /></td>
-      <td>{task.priority}</td>
+      <td><PriorityBadge priority={task.priority} /></td>
       <td>
         <button className="btn-complete" onClick={() => mutate(task.id)} disabled={isPending || isDone}>
           {isPending ? (

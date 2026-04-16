@@ -39,27 +39,48 @@ export function TaskListPage({ agencyId }: { agencyId: string }) {
   }
 
   return (
-    <div>
-      <SummaryCards
-        tasks={tasks ?? []}
-        activeFilter={statusFilter}
-        onFilterChange={setStatusFilter}
-      />
+    <div className="task-list-page">
+      <div className="page-header">
+        <h1 className="page-title">Tasks</h1>
+      </div>
 
-      {visible.length === 0 ? (
-        <p>No tasks found.</p>
-      ) : (
-        <table className="task-table">
-          <tbody>
-            {visible.map((task) => (
-              <tr key={task.id}>
-                <TaskRow task={task} />
+      <section className="page-section">
+        <SummaryCards
+          tasks={tasks ?? []}
+          activeFilter={statusFilter}
+          onFilterChange={setStatusFilter}
+        />
+      </section>
+
+      <section className="page-section">
+        <h2 className="section-title">Task list</h2>
+        {visible.length === 0 ? (
+          <p className="empty-state">No tasks found.</p>
+        ) : (
+          <table className="task-table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      <CreateTaskForm agencyId={agencyId} />
+            </thead>
+            <tbody>
+              {visible.map((task) => (
+                <tr key={task.id}>
+                  <TaskRow task={task} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section className="page-section page-section--form">
+        <h2 className="section-title">New task</h2>
+        <CreateTaskForm agencyId={agencyId} />
+      </section>
     </div>
   );
 }

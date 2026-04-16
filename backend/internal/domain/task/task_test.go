@@ -110,6 +110,28 @@ func TestAssign(t *testing.T) {
 	}
 }
 
+func TestUnassign(t *testing.T) {
+	userID := uuid.New()
+
+	tests := []struct {
+		name string
+		task Task
+	}{
+		{"unassigns an assigned task", Task{ID: uuid.New(), AssigneeID: &userID}},
+		{"unassigning an already unassigned task is a no-op", Task{ID: uuid.New(), AssigneeID: nil}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			task := tt.task
+			task.Unassign()
+			if task.AssigneeID != nil {
+				t.Errorf("Unassign() AssigneeID = %v, want nil", task.AssigneeID)
+			}
+		})
+	}
+}
+
 func TestComplete(t *testing.T) {
 	now := time.Date(2026, 4, 2, 12, 0, 0, 0, time.UTC)
 
