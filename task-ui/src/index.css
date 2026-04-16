@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap');
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -118,14 +120,17 @@ code {
 }
 
 .page-header {
-  padding: 28px 32px 20px;
+  padding: 32px 32px 24px;
   border-bottom: 1px solid var(--border);
+  text-align: center;
 }
 
 .page-title {
-  font-size: 26px;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 30px;
   font-weight: 600;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.75px;
+  line-height: 1.1;
   margin: 0;
   color: var(--text-h);
 }
@@ -161,6 +166,8 @@ code {
 
 .task-table td:first-child a {
   color: var(--text-h);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 20px;
   font-weight: 500;
   text-decoration: none;
   transition: color 0.15s;
@@ -288,11 +295,12 @@ code {
 /* ── Task table ─────────────────────────────────────── */
 
 .page {
-  padding: 0 32px 48px;
+  padding: 28px 32px 48px;
   text-align: left;
 
   & h1 {
-    font-size: 32px;
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 35px;
     letter-spacing: -0.5px;
     margin: 20px 0 24px;
   }
@@ -381,7 +389,7 @@ code {
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 16px;
 
   @media (max-width: 600px) {
@@ -392,34 +400,38 @@ code {
 .summary-card {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 12px 16px;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 20px 24px;
   border-radius: 10px;
-  border: 1.5px solid transparent;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--card-color);
   background: var(--code-bg);
   cursor: pointer;
-  text-align: left;
-  transition: box-shadow 0.15s, border-color 0.15s, transform 0.1s;
+  text-align: center;
+  transition: box-shadow 0.2s, transform 0.15s, background 0.15s;
 
   &:hover {
+    background: var(--card-bg);
     box-shadow: var(--shadow);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
   }
 }
 
 .summary-card__count {
-  font-size: 24px;
+  font-size: 40px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.5px;
+  letter-spacing: -1.5px;
+  color: var(--card-color);
 }
 
 .summary-card__label {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--text);
 }
 
 /* per-status color tokens */
@@ -435,12 +447,11 @@ code {
   .summary-card--done        { --card-color: #4ade80;        --card-bg: rgba(74, 222, 128, 0.15);             --card-border: rgba(74, 222, 128, 0.3); }
 }
 
-.summary-card .summary-card__count { color: var(--card-color); }
-.summary-card .summary-card__label { color: var(--card-color); }
-
 .summary-card--active {
   background: var(--card-bg);
   border-color: var(--card-border);
+  border-top-color: var(--card-color);
+  box-shadow: var(--shadow);
 }
 
 /* ── Detail page ────────────────────────────────────────────── */
@@ -449,14 +460,32 @@ code {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--text);
   text-decoration: none;
-  transition: opacity 0.15s;
+  padding: 6px 12px 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--code-bg);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  margin-bottom: 24px;
+
+  &::before {
+    content: '←';
+    font-size: 15px;
+    line-height: 1;
+    transition: transform 0.15s;
+  }
 
   &:hover {
-    opacity: 0.75;
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--accent-bg);
+
+    &::before {
+      transform: translateX(-2px);
+    }
   }
 }
 

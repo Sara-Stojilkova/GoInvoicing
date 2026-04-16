@@ -34,7 +34,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   if (isError) {
     return (
       <Box role="alert" sx={{ p: 4 }}>
-        <Link to="/" className="back-link">← Back to list</Link>
+        <Link to="/" className="back-link">Back to list</Link>
         <Typography sx={{ fontWeight: 600, mt: 2 }}>
           {(error as { status?: number })?.status === 404
             ? "Task not found."
@@ -48,7 +48,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
 
   return (
     <div className="page">
-      <Link to="/" className="back-link">← Back to list</Link>
+      <Link to="/" className="back-link">Back to list</Link>
       <h1>{task.title}</h1>
       <dl className="detail-grid">
         <Field label="Status"><StatusBadge status={task.status} /></Field>
