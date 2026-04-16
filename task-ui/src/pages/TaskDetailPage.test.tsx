@@ -234,6 +234,42 @@ describe("TaskDetailPage", () => {
     });
   });
 
+  describe("assignee", () => {
+    it("renders a select to change the assignee", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByRole("combobox", { name: /assignee/i })).toBeInTheDocument();
+    });
+
+    it("populates the select with users", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByRole("option", { name: assigneeUser.name })).toBeInTheDocument();
+    });
+
+    it("pre-selects the current assignee", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      const select = screen.getByRole("combobox", { name: /assignee/i }) as HTMLSelectElement;
+      expect(select.value).toBe(assigneeId);
+    });
+
+    it("calls assignTask when a new assignee is selected", async () => {
+      const spy = vi.spyOn(tasksApi, "assignTask").mockResolvedValue(undefined);
+      const newUser: User = { id: "new-user-id", name: "Bob", email: "bob@acme.com", role: "member", agency_id: agencyId, created_at: "2024-01-01T00:00:00Z" };
+      vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
+      vi.spyOn(usersApi, "listUsers").mockResolvedValue([assigneeUser, newUser]);
+      vi.spyOn(agenciesApi, "getAgency").mockResolvedValue(agency);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.selectOptions(screen.getByRole("combobox", { name: /assignee/i }), "new-user-id");
+      await waitFor(() => expect(spy).toHaveBeenCalledWith(taskId, { assignee_id: "new-user-id", assignee_agency_id: agencyId }));
+    });
+  });
+
   describe("complete button", () => {
     it("renders a complete button when the task is not done", async () => {
       mockApis(fullTask);
