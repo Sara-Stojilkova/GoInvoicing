@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useTask, useCompleteTask, useAssignTask } from "../hooks/useTasks";
+import { useTask, useCompleteTask, useAssignTask, useSetInProgress } from "../hooks/useTasks";
 import { useUsers } from "../hooks/useUsers";
 import { useAgency } from "../hooks/useAgency";
 import { StatusBadge } from "../component/StatusBadge";
@@ -26,7 +26,8 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   const { data: task, isLoading, isError, error } = useTask(taskId, agencyId);
   const { data: users } = useUsers(agencyId);
   const { data: agency } = useAgency(agencyId);
-  const { mutate: complete, isPending: isCompleting } = useCompleteTask(agencyId);
+  const { mutate: complete } = useCompleteTask(agencyId);
+  const { mutate: setInProgress } = useSetInProgress(agencyId);
   const { mutate: assign } = useAssignTask(agencyId);
 
   if (isLoading) {
@@ -97,17 +98,23 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
             : <span className="detail-field__empty">No description</span>}
         </Field>
       </dl>
-      {task.status !== "done" && (
-        <div className="detail-actions">
-          <button
-            className="btn-complete"
-            onClick={() => complete(task.id)}
-            disabled={isCompleting}
-          >
-            {isCompleting ? <span className="spinner" aria-label="loading" /> : "Complete"}
-          </button>
-        </div>
-      )}
+      <div className="detail-actions">
+        <label htmlFor="status-action" className="detail-field__label">Change status</label>
+        <select
+          id="status-action"
+          aria-label="Change status"
+          className="create-form__select detail-actions__select"
+          value=""
+          onChange={(e) => {
+            if (e.target.value === "complete") complete(task.id);
+            if (e.target.value === "in_progress") setInProgress(task.id);
+          }}
+        >
+          <option value="" disabled hidden>Change status…</option>
+          <option value="complete" disabled={task.status === "done"}>Complete</option>
+          <option value="in_progress" disabled={task.status === "in_progress"}>Set In Progress</option>
+        </select>
+      </div>
     </div>
   );
 }
