@@ -1,6 +1,8 @@
 import { Link, useParams } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useTask } from "../hooks/useTasks";
+import { useUsers } from "../hooks/useUsers";
+import { useAgency } from "../hooks/useAgency";
 import { StatusBadge } from "../component/StatusBadge";
 
 function formatDate(iso: string) {
@@ -21,6 +23,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   const { taskId = null } = useParams<{ taskId: string }>();
   const { data: task, isLoading, isError, error } = useTask(taskId, agencyId);
+  const { data: users } = useUsers(agencyId);
+  const { data: agency } = useAgency(agencyId);
 
   if (isLoading) {
     return (
@@ -46,6 +50,9 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
 
   if (!task) return null;
 
+  const assigneeName = users?.find((u) => u.id === task.assignee_id)?.name ?? task.assignee_id;
+  const agencyName = agency?.name ?? task.agency_id;
+
   return (
     <div className="page">
       <Link to="/" className="back-link">Back to list</Link>
@@ -54,22 +61,28 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
         <Field label="Status"><StatusBadge status={task.status} /></Field>
         <Field label="Priority">{task.priority}</Field>
         <Field label="ID">{task.id}</Field>
-        <Field label="Agency">{task.agency_id}</Field>
+        <Field label="Agency">{agencyName}</Field>
         <Field label="Created">{formatDate(task.created_at)}</Field>
         <Field label="Assignee">
-          {task.assignee_id ?? <span className="detail-field__empty">Unassigned</span>}
+          {task.assignee_id
+            ? assigneeName
+            : <span className="detail-field__empty">Unassigned</span>}
         </Field>
         <Field label="Due date">
           {task.due_date
             ? formatDate(task.due_date)
             : <span className="detail-field__empty">No due date</span>}
         </Field>
-        {task.completed_at && (
-          <Field label="Completed">{formatDate(task.completed_at)}</Field>
-        )}
-        {task.description && (
-          <Field label="Description">{task.description}</Field>
-        )}
+        <Field label="Completed">
+          {task.completed_at
+            ? formatDate(task.completed_at)
+            : <span className="detail-field__empty">Not completed</span>}
+        </Field>
+        <Field label="Description">
+          {task.description
+            ? task.description
+            : <span className="detail-field__empty">No description</span>}
+        </Field>
       </dl>
     </div>
   );

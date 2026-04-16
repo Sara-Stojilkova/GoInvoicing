@@ -5,11 +5,28 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { createTestQueryClient } from "../test/testQueryClient";
 import { TaskDetailPage } from "./TaskDetailPage";
 import * as tasksApi from "../api/tasks";
-import type { Task } from "../types/api";
+import * as usersApi from "../api/users";
+import * as agenciesApi from "../api/agencies";
+import type { Task, User, Agency } from "../types/api";
 
 const agencyId   = "a1b2c3d4-0000-0000-0000-000000000001";
 const taskId     = "c3d4e5f6-0000-0000-0000-000000000003";
 const assigneeId = "b2c3d4e5-0000-0000-0000-000000000002";
+
+const agency: Agency = {
+  id: agencyId,
+  name: "Acme Corp",
+  created_at: "2024-01-01T00:00:00Z",
+};
+
+const assigneeUser: User = {
+  id: assigneeId,
+  name: "Alice",
+  email: "alice@acme.com",
+  role: "admin",
+  agency_id: agencyId,
+  created_at: "2024-01-01T00:00:00Z",
+};
 
 const fullTask: Task = {
   id:           taskId,
@@ -42,6 +59,12 @@ const completedTask: Task = {
   status:       "done",
   completed_at: "2024-01-20T14:30:00Z",
 };
+
+function mockApis(task: Task = fullTask) {
+  vi.spyOn(tasksApi,    "getTask").mockResolvedValue(task);
+  vi.spyOn(usersApi,    "listUsers").mockResolvedValue([assigneeUser]);
+  vi.spyOn(agenciesApi, "getAgency").mockResolvedValue(agency);
+}
 
 function renderPage(id = taskId) {
   const queryClient = createTestQueryClient();
@@ -99,7 +122,7 @@ describe("TaskDetailPage", () => {
 
   describe("navigation", () => {
     it("renders a back link to the list", async () => {
-      vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
+      mockApis();
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.getByRole("link", { name: /back/i })).toHaveAttribute("href", "/");
@@ -107,9 +130,7 @@ describe("TaskDetailPage", () => {
   });
 
   describe("success state — required fields", () => {
-    beforeEach(() => {
-      vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
-    });
+    beforeEach(() => mockApis());
 
     it("reads the task id from the URL and fetches the right task", async () => {
       const spy = vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
@@ -141,10 +162,10 @@ describe("TaskDetailPage", () => {
       expect(screen.getByText(/high/i)).toBeInTheDocument();
     });
 
-    it("renders the agency id", async () => {
+    it("renders the agency name", async () => {
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByText(agencyId)).toBeInTheDocument();
+      expect(screen.getByText(agency.name)).toBeInTheDocument();
     });
 
     it("renders the created_at date", async () => {
@@ -156,59 +177,59 @@ describe("TaskDetailPage", () => {
 
   describe("success state — optional fields", () => {
     it("renders the description when present", async () => {
-      vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
+      mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.getByText("Users cannot log in with SSO enabled")).toBeInTheDocument();
     });
 
-    it("does not render a description section when description is null", async () => {
-      vi.spyOn(tasksApi, "getTask").mockResolvedValue(minimalTask);
+    it("shows no description when description is null", async () => {
+      mockApis(minimalTask);
       renderPage();
       await waitFor(() => screen.getByText("Minimal task"));
-      expect(screen.queryByText(/description/i)).not.toBeInTheDocument();
+      expect(screen.getByText(/no description/i)).toBeInTheDocument();
     });
 
-    it("renders the assignee_id when present", async () => {
-      vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
+    it("renders the assignee name when present", async () => {
+      mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByText(assigneeId)).toBeInTheDocument();
+      expect(screen.getByText(assigneeUser.name)).toBeInTheDocument();
     });
 
     it("shows unassigned when assignee_id is null", async () => {
-      vi.spyOn(tasksApi, "getTask").mockResolvedValue(minimalTask);
+      mockApis(minimalTask);
       renderPage();
       await waitFor(() => screen.getByText("Minimal task"));
       expect(screen.getByText(/unassigned/i)).toBeInTheDocument();
     });
 
     it("renders the due date when present", async () => {
-      vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
+      mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.getByText(/feb.*1.*2024|2024.*02.*01/i)).toBeInTheDocument();
     });
 
     it("shows no due date when due_date is null", async () => {
-      vi.spyOn(tasksApi, "getTask").mockResolvedValue(minimalTask);
+      mockApis(minimalTask);
       renderPage();
       await waitFor(() => screen.getByText("Minimal task"));
       expect(screen.getByText(/no due date/i)).toBeInTheDocument();
     });
 
     it("renders the completed_at date when present", async () => {
-      vi.spyOn(tasksApi, "getTask").mockResolvedValue(completedTask);
+      mockApis(completedTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.getByText(/jan.*20.*2024|2024.*01.*20/i)).toBeInTheDocument();
     });
 
-    it("does not render a completed section when task is not done", async () => {
-      vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
+    it("shows not completed when completed_at is null", async () => {
+      mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.queryByText(/completed/i)).not.toBeInTheDocument();
+      expect(screen.getByText(/not completed/i)).toBeInTheDocument();
     });
   });
 });
