@@ -54,7 +54,6 @@
   width: 1126px;
   max-width: 100%;
   margin: 0 auto;
-  text-align: center;
   border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
@@ -108,6 +107,67 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* ── Task list page layout ──────────────────────────── */
+
+.task-list-page {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.page-header {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin: 0;
+  color: var(--text-h);
+}
+
+.page-section {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border);
+
+  & .summary-cards {
+    margin-bottom: 0;
+  }
+}
+
+.page-section--form {
+  border-bottom: none;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 0 0 14px;
+  line-height: 1;
+}
+
+.empty-state {
+  color: var(--text);
+  font-size: 14px;
+  padding: 20px 0 4px;
+}
+
+.task-table td:first-child a {
+  color: var(--text-h);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--accent);
+  }
 }
 
 /* ── Create task form ───────────────────────────────── */
