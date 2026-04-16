@@ -163,6 +163,24 @@ func (h *TaskHandler) Complete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// POST /tasks/{id}/unassign
+func (h *TaskHandler) Unassign(w http.ResponseWriter, r *http.Request) {
+	taskID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		api.WriteError(w, http.StatusBadRequest, "invalid task id")
+		return
+	}
+	if err := h.svc.UnassignTask(r.Context(), taskID); err != nil {
+		if errors.Is(err, apperrors.ErrNotFound) {
+			api.WriteError(w, http.StatusNotFound, "task not found")
+			return
+		}
+		api.WriteError(w, http.StatusInternalServerError, "failed to unassign task")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // POST /tasks/{id}/set-in-progress
 func (h *TaskHandler) SetInProgress(w http.ResponseWriter, r *http.Request) {
 	taskID, err := uuid.Parse(chi.URLParam(r, "id"))

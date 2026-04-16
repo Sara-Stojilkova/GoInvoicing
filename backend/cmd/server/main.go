@@ -81,6 +81,7 @@ func main() {
 		r.Post("/", taskHandler.Create)
 		r.Get("/{id}", taskHandler.Get)
 		r.Post("/{id}/assign", taskHandler.Assign)
+		r.Post("/{id}/unassign", taskHandler.Unassign)
 		r.Post("/{id}/complete", taskHandler.Complete)
 		r.Post("/{id}/set-in-progress", taskHandler.SetInProgress)
 	})

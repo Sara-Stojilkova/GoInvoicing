@@ -47,6 +47,15 @@ func (s *TaskService) Create(
 	return task, nil
 }
 
+func (s *TaskService) UnassignTask(ctx context.Context, taskID uuid.UUID) error {
+	task, err := s.repo.GetByID(ctx, taskID)
+	if err != nil {
+		return err
+	}
+	task.Unassign()
+	return s.repo.Update(ctx, task)
+}
+
 func (s *TaskService) AssignTask(ctx context.Context, taskID, assigneeID, assigneeAgencyID uuid.UUID) error {
 	task, err := s.repo.GetByID(ctx, taskID)
 	if err != nil {
