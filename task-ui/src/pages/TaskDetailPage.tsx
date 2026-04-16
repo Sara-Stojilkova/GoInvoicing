@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useTask } from "../hooks/useTasks";
+import { useTask, useCompleteTask } from "../hooks/useTasks";
 import { useUsers } from "../hooks/useUsers";
 import { useAgency } from "../hooks/useAgency";
 import { StatusBadge } from "../component/StatusBadge";
@@ -26,6 +26,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   const { data: task, isLoading, isError, error } = useTask(taskId, agencyId);
   const { data: users } = useUsers(agencyId);
   const { data: agency } = useAgency(agencyId);
+  const { mutate: complete, isPending: isCompleting } = useCompleteTask(agencyId);
 
   if (isLoading) {
     return (
@@ -85,6 +86,17 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
             : <span className="detail-field__empty">No description</span>}
         </Field>
       </dl>
+      {task.status !== "done" && (
+        <div className="detail-actions">
+          <button
+            className="btn-complete"
+            onClick={() => complete(task.id)}
+            disabled={isCompleting}
+          >
+            {isCompleting ? <span className="spinner" aria-label="loading" /> : "Complete"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
