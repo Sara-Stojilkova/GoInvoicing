@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
-import { useTasks, useCreateTask, useCompleteTask, useTask, useAssignTask } from "./useTasks";
+import { useTasks, useCreateTask, useCompleteTask, useTask, useAssignTask, useSetInProgress } from "./useTasks";
 import { createTestQueryClient } from "../test/testQueryClient";
 import { createWrapper } from "../test/wrapper";
 import * as tasksApi from "../api/tasks";
@@ -303,6 +303,47 @@ describe("useAssignTask", () => {
 
     const { result } = renderHook(() => useAssignTask(agencyId), { wrapper: Wrapper });
     result.current.mutate(payload);
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe("useSetInProgress", () => {
+  it("calls setTaskInProgress with the task id", async () => {
+    const spy = vi.spyOn(tasksApi, "setTaskInProgress").mockResolvedValue(undefined);
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useSetInProgress(agencyId), { wrapper: Wrapper });
+    result.current.mutate(tasks[0].id);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(spy).toHaveBeenCalledWith(tasks[0].id, expect.any(Object));
+  });
+
+  it("invalidates the task cache for the agency on success", async () => {
+    vi.spyOn(tasksApi, "setTaskInProgress").mockResolvedValue(undefined);
+    vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
+    const { queryClient, Wrapper } = makeWrapper();
+
+    await queryClient.prefetchQuery({
+      queryKey: ["tasks", agencyId],
+      queryFn: () => tasksApi.listTasks(agencyId),
+    });
+    expect(queryClient.getQueryState(["tasks", agencyId])?.isInvalidated).toBe(false);
+
+    const { result } = renderHook(() => useSetInProgress(agencyId), { wrapper: Wrapper });
+    result.current.mutate(tasks[0].id);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(queryClient.getQueryState(["tasks", agencyId])?.isInvalidated).toBe(true);
+  });
+
+  it("exposes isError when setTaskInProgress rejects", async () => {
+    vi.spyOn(tasksApi, "setTaskInProgress").mockRejectedValue(new Error("conflict"));
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useSetInProgress(agencyId), { wrapper: Wrapper });
+    result.current.mutate(tasks[0].id);
 
     await waitFor(() => expect(result.current.isError).toBe(true));
   });

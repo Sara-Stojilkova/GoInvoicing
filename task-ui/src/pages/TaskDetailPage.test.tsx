@@ -154,7 +154,7 @@ describe("TaskDetailPage", () => {
     it("renders the status", async () => {
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByText(/in.progress/i)).toBeInTheDocument();
+      expect(screen.getByText("In Progress", { selector: "span" })).toBeInTheDocument();
     });
 
     it("renders the priority badge", async () => {
@@ -270,27 +270,51 @@ describe("TaskDetailPage", () => {
     });
   });
 
-  describe("complete button", () => {
-    it("renders a complete button when the task is not done", async () => {
+  describe("status actions", () => {
+    it("renders a status select", async () => {
       mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByRole("button", { name: /complete/i })).toBeInTheDocument();
+      expect(screen.getByRole("combobox", { name: /change status/i })).toBeInTheDocument();
     });
 
-    it("does not render a complete button when the task is already done", async () => {
+    it("has Complete and Set In Progress options", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByRole("option", { name: /complete/i })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: /in progress/i })).toBeInTheDocument();
+    });
+
+    it("disables the Complete option when the task is already done", async () => {
       mockApis(completedTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.queryByRole("button", { name: /complete/i })).not.toBeInTheDocument();
+      expect(screen.getByRole("option", { name: /complete/i })).toBeDisabled();
     });
 
-    it("calls completeTask when the button is clicked", async () => {
-      const spy = vi.spyOn(tasksApi, "completeTask").mockResolvedValue(undefined);
-      mockApis(fullTask);
+    it("disables the Set In Progress option when the task is already in progress", async () => {
+      mockApis(fullTask); // fullTask has status "in_progress"
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      await userEvent.click(screen.getByRole("button", { name: /complete/i }));
+      expect(screen.getByRole("option", { name: /in progress/i })).toBeDisabled();
+    });
+
+    it("calls completeTask when Complete is selected", async () => {
+      const spy = vi.spyOn(tasksApi, "completeTask").mockResolvedValue(undefined);
+      mockApis({ ...fullTask, status: "todo" });
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.selectOptions(screen.getByRole("combobox", { name: /change status/i }), "complete");
+      await waitFor(() => expect(spy).toHaveBeenCalledWith(taskId, expect.any(Object)));
+    });
+
+    it("calls setTaskInProgress when Set In Progress is selected", async () => {
+      const spy = vi.spyOn(tasksApi, "setTaskInProgress").mockResolvedValue(undefined);
+      mockApis({ ...fullTask, status: "todo" });
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.selectOptions(screen.getByRole("combobox", { name: /change status/i }), "in_progress");
       await waitFor(() => expect(spy).toHaveBeenCalledWith(taskId, expect.any(Object)));
     });
   });
