@@ -156,10 +156,10 @@ describe("TaskDetailPage", () => {
       expect(screen.getByText(/in.progress/i)).toBeInTheDocument();
     });
 
-    it("renders the priority", async () => {
+    it("renders the priority badge", async () => {
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByText(/high/i)).toBeInTheDocument();
+      expect(screen.getByText("High")).toBeInTheDocument();
     });
 
     it("renders the agency name", async () => {
