@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { createTestQueryClient } from "../test/testQueryClient";
@@ -230,6 +231,31 @@ describe("TaskDetailPage", () => {
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.getByText(/not completed/i)).toBeInTheDocument();
+    });
+  });
+
+  describe("complete button", () => {
+    it("renders a complete button when the task is not done", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByRole("button", { name: /complete/i })).toBeInTheDocument();
+    });
+
+    it("does not render a complete button when the task is already done", async () => {
+      mockApis(completedTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.queryByRole("button", { name: /complete/i })).not.toBeInTheDocument();
+    });
+
+    it("calls completeTask when the button is clicked", async () => {
+      const spy = vi.spyOn(tasksApi, "completeTask").mockResolvedValue(undefined);
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.click(screen.getByRole("button", { name: /complete/i }));
+      await waitFor(() => expect(spy).toHaveBeenCalledWith(taskId, expect.any(Object)));
     });
   });
 });
