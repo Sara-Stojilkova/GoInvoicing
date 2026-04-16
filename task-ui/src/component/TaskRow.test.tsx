@@ -58,7 +58,7 @@ describe("TaskRow", () => {
 
   it("renders the priority", () => {
     renderRow();
-    expect(screen.getByText("high")).toBeInTheDocument();
+    expect(screen.getByText("High")).toBeInTheDocument();
   });
 
   it("renders complete button", () => {
