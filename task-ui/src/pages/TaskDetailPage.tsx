@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useTask, useCompleteTask, useAssignTask, useSetInProgress } from "../hooks/useTasks";
+import { useTask, useCompleteTask, useAssignTask, useSetInProgress, useUpdateDueDate } from "../hooks/useTasks";
 import { useUsers } from "../hooks/useUsers";
 import { useAgency } from "../hooks/useAgency";
 import { StatusBadge } from "../component/StatusBadge";
@@ -29,6 +29,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   const { mutate: complete } = useCompleteTask(agencyId);
   const { mutate: setInProgress } = useSetInProgress(agencyId);
   const { mutate: assign } = useAssignTask(agencyId);
+  const { mutate: updateDueDate } = useUpdateDueDate(agencyId);
 
   if (isLoading) {
     return (
@@ -83,9 +84,15 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
           </select>
         </Field>
         <Field label="Due date">
-          {task.due_date
-            ? formatDate(task.due_date)
-            : <span className="detail-field__empty">No due date</span>}
+          <input
+            type="date"
+            aria-label="Due date"
+            defaultValue={task.due_date ? task.due_date.split("T")[0] : ""}
+            onBlur={(e) => {
+              const value = e.target.value || null;
+              updateDueDate({ taskId: task.id, dueDate: value });
+            }}
+          />
         </Field>
         <Field label="Completed">
           {task.completed_at
