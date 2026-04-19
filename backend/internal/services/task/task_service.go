@@ -129,11 +129,11 @@ func (s *TaskService) SetInProgress(ctx context.Context, taskID uuid.UUID) error
 	return s.repo.Update(ctx, task)
 }
 
-func (s *TaskService) SetDueDate(ctx context.Context, taskID uuid.UUID, dueDate time.Time) error {
+func (s *TaskService) SetDueDate(ctx context.Context, taskID uuid.UUID, dueDate *time.Time) error {
 	task, err := s.repo.GetByID(ctx, taskID)
 	if err != nil {
 		return err
 	}
-	task.DueDate = &dueDate
+	task.SetDueDate(dueDate)
 	return s.repo.Update(ctx, task)
 }
