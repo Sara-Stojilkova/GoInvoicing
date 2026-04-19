@@ -207,6 +207,41 @@ func TestSetInProgress(t *testing.T) {
 	}
 }
 
+func TestSetDueDate(t *testing.T) {
+	date := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	other := time.Date(2026, 9, 15, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name    string
+		task    Task
+		dueDate *time.Time
+		want    *time.Time
+	}{
+		{"sets a due date on a task with none", Task{ID: uuid.New()}, timePtr(date), timePtr(date)},
+		{"overwrites an existing due date", Task{ID: uuid.New(), DueDate: timePtr(date)}, timePtr(other), timePtr(other)},
+		{"clears the due date when passed nil", Task{ID: uuid.New(), DueDate: timePtr(date)}, nil, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			task := tt.task
+			task.SetDueDate(tt.dueDate)
+			if tt.want == nil {
+				if task.DueDate != nil {
+					t.Errorf("SetDueDate() DueDate = %v, want nil", task.DueDate)
+				}
+			} else {
+				if task.DueDate == nil {
+					t.Fatal("SetDueDate() DueDate is nil, want non-nil")
+				}
+				if !task.DueDate.Equal(*tt.want) {
+					t.Errorf("SetDueDate() DueDate = %v, want %v", task.DueDate, tt.want)
+				}
+			}
+		})
+	}
+}
+
 func TestFilterByStatus(t *testing.T) {
 	tasks := []Task{
 		{ID: uuid.New(), Status: "todo"},
