@@ -270,6 +270,59 @@ describe("TaskDetailPage", () => {
     });
   });
 
+  describe("due date", () => {
+    it("renders a date input for the due date field", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByRole("textbox", { name: /due date/i })).toBeInTheDocument();
+    });
+
+    it("pre-populates the date input with the current due date", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      // fullTask.due_date = "2024-02-01T00:00:00Z" → YYYY-MM-DD = "2024-02-01"
+      const input = screen.getByRole("textbox", { name: /due date/i }) as HTMLInputElement;
+      expect(input.value).toBe("2024-02-01");
+    });
+
+    it("renders an empty date input when due_date is null", async () => {
+      mockApis(minimalTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Minimal task"));
+      const input = screen.getByRole("textbox", { name: /due date/i }) as HTMLInputElement;
+      expect(input.value).toBe("");
+    });
+
+    it("calls updateDueDate when a new date is entered", async () => {
+      const spy = vi.spyOn(tasksApi, "updateDueDate").mockResolvedValue(undefined);
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      const input = screen.getByRole("textbox", { name: /due date/i });
+      await userEvent.clear(input);
+      await userEvent.type(input, "2024-03-15");
+      input.blur();
+      await waitFor(() =>
+        expect(spy).toHaveBeenCalledWith(taskId, "2024-03-15")
+      );
+    });
+
+    it("calls updateDueDate with null when the date is cleared", async () => {
+      const spy = vi.spyOn(tasksApi, "updateDueDate").mockResolvedValue(undefined);
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      const input = screen.getByRole("textbox", { name: /due date/i });
+      await userEvent.clear(input);
+      input.blur();
+      await waitFor(() =>
+        expect(spy).toHaveBeenCalledWith(taskId, null)
+      );
+    });
+  });
+
   describe("status actions", () => {
     it("renders a status select", async () => {
       mockApis(fullTask);

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { listTasks, getTask, createTask, assignTask, completeTask, setTaskInProgress } from "./tasks";
+import { listTasks, getTask, createTask, assignTask, completeTask, setTaskInProgress, updateDueDate } from "./tasks";
 
 const agencyId = "a1b2c3d4-0000-0000-0000-000000000001";
 const taskId = "c3d4e5f6-0000-0000-0000-000000000003";
@@ -217,6 +217,56 @@ describe("completeTask", () => {
   it("throws ApiError with status 409 when task is already completed", async () => {
     mockFetch(409, { error: "task already completed" });
     await expect(completeTask(taskId)).rejects.toMatchObject({ status: 409 });
+  });
+});
+
+describe("updateDueDate", () => {
+  it("calls PATCH /api/tasks/:id/due-date", async () => {
+    const fetchMock = vi.fn().mockImplementation(() =>
+      new Response(null, { status: 204 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await updateDueDate(taskId, "2024-03-15");
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`/api/tasks/${taskId}/due-date`);
+    expect(init.method).toBe("PATCH");
+  });
+
+  it("sends due_date in the request body when a date is provided", async () => {
+    const fetchMock = vi.fn().mockImplementation(() =>
+      new Response(null, { status: 204 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await updateDueDate(taskId, "2024-03-15");
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(init.body as string)).toEqual({ due_date: "2024-03-15" });
+  });
+
+  it("sends due_date as null in the request body when cleared", async () => {
+    const fetchMock = vi.fn().mockImplementation(() =>
+      new Response(null, { status: 204 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await updateDueDate(taskId, null);
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(init.body as string)).toEqual({ due_date: null });
+  });
+
+  it("returns void on 204", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => new Response(null, { status: 204 })));
+    const result = await updateDueDate(taskId, "2024-03-15");
+    expect(result).toBeUndefined();
+  });
+
+  it("throws ApiError with status 404 when task not found", async () => {
+    mockFetch(404, { error: "not found" });
+    await expect(updateDueDate("missing-id", "2024-03-15")).rejects.toMatchObject({ status: 404 });
   });
 });
 
