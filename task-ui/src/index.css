@@ -535,6 +535,32 @@ code {
   font-style: italic;
 }
 
+.detail-date-input {
+  height: 34px;
+  width: 100%;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  font-family: var(--sans);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+
+  /* tint the calendar icon to match the muted text colour */
+  color-scheme: light;
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+}
+
 .detail-actions {
   display: flex;
   flex-direction: column;

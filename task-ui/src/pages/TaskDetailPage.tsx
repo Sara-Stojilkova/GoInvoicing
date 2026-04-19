@@ -85,8 +85,10 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
         </Field>
         <Field label="Due date">
           <input
+            key={task.due_date}
             type="date"
             aria-label="Due date"
+            className="detail-date-input"
             defaultValue={task.due_date ? task.due_date.split("T")[0] : ""}
             onBlur={(e) => {
               const value = e.target.value || null;
