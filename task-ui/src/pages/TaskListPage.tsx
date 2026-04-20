@@ -42,10 +42,6 @@ export function TaskListPage({ agencyId }: { agencyId: string }) {
 
   return (
     <div className="task-list-page">
-      <div className="page-header">
-        <h1 className="page-title">Tasks</h1>
-      </div>
-
       <div className="task-list-body">
         <div className="task-list-left">
           <section className="page-section">
