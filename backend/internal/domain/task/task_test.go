@@ -207,6 +207,76 @@ func TestSetInProgress(t *testing.T) {
 	}
 }
 
+func TestSetDescription(t *testing.T) {
+	desc := "Fix the login flow"
+	other := "Update the README"
+
+	tests := []struct {
+		name    string
+		task    Task
+		input   *string
+		want    *string
+	}{
+		{"sets description on a task with none", Task{ID: uuid.New()}, &desc, &desc},
+		{"overwrites an existing description", Task{ID: uuid.New(), Description: &desc}, &other, &other},
+		{"clears description when passed nil", Task{ID: uuid.New(), Description: &desc}, nil, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			task := tt.task
+			task.SetDescription(tt.input)
+			if tt.want == nil {
+				if task.Description != nil {
+					t.Errorf("SetDescription() Description = %q, want nil", *task.Description)
+				}
+			} else {
+				if task.Description == nil {
+					t.Fatal("SetDescription() Description is nil, want non-nil")
+				}
+				if *task.Description != *tt.want {
+					t.Errorf("SetDescription() Description = %q, want %q", *task.Description, *tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestSetDueDate(t *testing.T) {
+	date := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	other := time.Date(2026, 9, 15, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name    string
+		task    Task
+		dueDate *time.Time
+		want    *time.Time
+	}{
+		{"sets a due date on a task with none", Task{ID: uuid.New()}, timePtr(date), timePtr(date)},
+		{"overwrites an existing due date", Task{ID: uuid.New(), DueDate: timePtr(date)}, timePtr(other), timePtr(other)},
+		{"clears the due date when passed nil", Task{ID: uuid.New(), DueDate: timePtr(date)}, nil, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			task := tt.task
+			task.SetDueDate(tt.dueDate)
+			if tt.want == nil {
+				if task.DueDate != nil {
+					t.Errorf("SetDueDate() DueDate = %v, want nil", task.DueDate)
+				}
+			} else {
+				if task.DueDate == nil {
+					t.Fatal("SetDueDate() DueDate is nil, want non-nil")
+				}
+				if !task.DueDate.Equal(*tt.want) {
+					t.Errorf("SetDueDate() DueDate = %v, want %v", task.DueDate, tt.want)
+				}
+			}
+		})
+	}
+}
+
 func TestFilterByStatus(t *testing.T) {
 	tasks := []Task{
 		{ID: uuid.New(), Status: "todo"},

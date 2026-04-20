@@ -205,14 +205,14 @@ describe("TaskDetailPage", () => {
       expect(screen.getByText(/unassigned/i)).toBeInTheDocument();
     });
 
-    it("renders the due date when present", async () => {
+    it("renders the formatted due date when present", async () => {
       mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
       expect(screen.getByText(/feb.*1.*2024|2024.*02.*01/i)).toBeInTheDocument();
     });
 
-    it("shows no due date when due_date is null", async () => {
+    it("shows no due date text when due_date is null", async () => {
       mockApis(minimalTask);
       renderPage();
       await waitFor(() => screen.getByText("Minimal task"));
@@ -267,6 +267,124 @@ describe("TaskDetailPage", () => {
       await waitFor(() => screen.getByText("Fix login bug"));
       await userEvent.selectOptions(screen.getByRole("combobox", { name: /assignee/i }), "new-user-id");
       await waitFor(() => expect(spy).toHaveBeenCalledWith(taskId, { assignee_id: "new-user-id", assignee_agency_id: agencyId }));
+    });
+  });
+
+  describe("description", () => {
+    it("renders an edit button for the description field", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByRole("button", { name: /edit description/i })).toBeInTheDocument();
+    });
+
+    it("shows the description text when present", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByText(fullTask.description!)).toBeInTheDocument();
+    });
+
+    it("shows no description text when description is null", async () => {
+      mockApis(minimalTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Minimal task"));
+      expect(screen.getByText(/no description/i)).toBeInTheDocument();
+    });
+
+    it("clicking the edit button reveals a textarea", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.click(screen.getByRole("button", { name: /edit description/i }));
+      expect(screen.getByRole("textbox", { name: /description/i })).toBeInTheDocument();
+    });
+
+    it("textarea is pre-populated with the current description", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.click(screen.getByRole("button", { name: /edit description/i }));
+      const textarea = screen.getByRole("textbox", { name: /description/i }) as HTMLTextAreaElement;
+      expect(textarea.value).toBe(fullTask.description);
+    });
+
+    it("calls updateDescription when the textarea loses focus with a new value", async () => {
+      const spy = vi.spyOn(tasksApi, "updateDescription").mockResolvedValue(undefined);
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.click(screen.getByRole("button", { name: /edit description/i }));
+      const textarea = screen.getByRole("textbox", { name: /description/i });
+      await userEvent.clear(textarea);
+      await userEvent.type(textarea, "New description text");
+      textarea.blur();
+      await waitFor(() => expect(spy).toHaveBeenCalledWith(taskId, "New description text"));
+    });
+
+    it("calls updateDescription with null when textarea is cleared", async () => {
+      const spy = vi.spyOn(tasksApi, "updateDescription").mockResolvedValue(undefined);
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.click(screen.getByRole("button", { name: /edit description/i }));
+      const textarea = screen.getByRole("textbox", { name: /description/i });
+      await userEvent.clear(textarea);
+      textarea.blur();
+      await waitFor(() => expect(spy).toHaveBeenCalledWith(taskId, null));
+    });
+  });
+
+  describe("due date", () => {
+    it("renders a date input for the due date field", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByLabelText("due-date-input")).toBeInTheDocument();
+    });
+
+    it("pre-populates the date input with the current due date", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      // fullTask.due_date = "2024-02-01T00:00:00Z" → YYYY-MM-DD = "2024-02-01"
+      const input = screen.getByLabelText("due-date-input") as HTMLInputElement;
+      expect(input.value).toBe("2024-02-01");
+    });
+
+    it("renders an empty date input when due_date is null", async () => {
+      mockApis(minimalTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Minimal task"));
+      const input = screen.getByLabelText("due-date-input") as HTMLInputElement;
+      expect(input.value).toBe("");
+    });
+
+    it("calls updateDueDate when a new date is entered", async () => {
+      const spy = vi.spyOn(tasksApi, "updateDueDate").mockResolvedValue(undefined);
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      const input = screen.getByLabelText("due-date-input");
+      await userEvent.clear(input);
+      await userEvent.type(input, "2024-03-15");
+      input.blur();
+      await waitFor(() =>
+        expect(spy).toHaveBeenCalledWith(taskId, "2024-03-15")
+      );
+    });
+
+    it("calls updateDueDate with null when the date is cleared", async () => {
+      const spy = vi.spyOn(tasksApi, "updateDueDate").mockResolvedValue(undefined);
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      const input = screen.getByLabelText("due-date-input");
+      await userEvent.clear(input);
+      input.blur();
+      await waitFor(() =>
+        expect(spy).toHaveBeenCalledWith(taskId, null)
+      );
     });
   });
 

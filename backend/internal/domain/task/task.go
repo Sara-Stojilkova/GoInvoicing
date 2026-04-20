@@ -55,6 +55,14 @@ func (t *Task) Unassign() {
 	t.AssigneeID = nil
 }
 
+func (t *Task) SetDueDate(dueDate *time.Time) {
+	t.DueDate = dueDate
+}
+
+func (t *Task) SetDescription(description *string) {
+	t.Description = description
+}
+
 func (t *Task) SetInProgress() error {
 	if t.Status == "in_progress" {
 		return fmt.Errorf("task %s: %w", t.ID, apperrors.ErrConflict)

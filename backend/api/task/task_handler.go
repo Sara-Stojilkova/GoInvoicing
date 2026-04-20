@@ -181,6 +181,69 @@ func (h *TaskHandler) Unassign(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+type updateDescriptionRequest struct {
+	Description *string `json:"description"`
+}
+
+// PATCH /tasks/{id}/description
+func (h *TaskHandler) UpdateDescription(w http.ResponseWriter, r *http.Request) {
+	taskID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		api.WriteError(w, http.StatusBadRequest, "invalid task id")
+		return
+	}
+	var req updateDescriptionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		api.WriteError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if err := h.svc.UpdateDescription(r.Context(), taskID, req.Description); err != nil {
+		if errors.Is(err, apperrors.ErrNotFound) {
+			api.WriteError(w, http.StatusNotFound, "task not found")
+			return
+		}
+		api.WriteError(w, http.StatusInternalServerError, "failed to update description")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+type updateDueDateRequest struct {
+	DueDate *string `json:"due_date"` // "YYYY-MM-DD" or null
+}
+
+// PATCH /tasks/{id}/due-date
+func (h *TaskHandler) UpdateDueDate(w http.ResponseWriter, r *http.Request) {
+	taskID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		api.WriteError(w, http.StatusBadRequest, "invalid task id")
+		return
+	}
+	var req updateDueDateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		api.WriteError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	var dueDate *time.Time
+	if req.DueDate != nil {
+		t, err := time.Parse("2006-01-02", *req.DueDate)
+		if err != nil {
+			api.WriteError(w, http.StatusBadRequest, "due_date must be in YYYY-MM-DD format")
+			return
+		}
+		dueDate = &t
+	}
+	if err := h.svc.SetDueDate(r.Context(), taskID, dueDate); err != nil {
+		if errors.Is(err, apperrors.ErrNotFound) {
+			api.WriteError(w, http.StatusNotFound, "task not found")
+			return
+		}
+		api.WriteError(w, http.StatusInternalServerError, "failed to update due date")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // POST /tasks/{id}/set-in-progress
 func (h *TaskHandler) SetInProgress(w http.ResponseWriter, r *http.Request) {
 	taskID, err := uuid.Parse(chi.URLParam(r, "id"))

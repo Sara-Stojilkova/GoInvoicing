@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
-import { useTasks, useCreateTask, useCompleteTask, useTask, useAssignTask, useSetInProgress } from "./useTasks";
+import { useTasks, useCreateTask, useCompleteTask, useTask, useAssignTask, useSetInProgress, useUpdateDueDate, useUpdateDescription } from "./useTasks";
 import { createTestQueryClient } from "../test/testQueryClient";
 import { createWrapper } from "../test/wrapper";
 import * as tasksApi from "../api/tasks";
@@ -302,6 +302,114 @@ describe("useAssignTask", () => {
     const { Wrapper } = makeWrapper();
 
     const { result } = renderHook(() => useAssignTask(agencyId), { wrapper: Wrapper });
+    result.current.mutate(payload);
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe("useUpdateDescription", () => {
+  const payload = { taskId: tasks[0].id, description: "Fix the login flow" };
+
+  it("calls updateDescription with the task id and description", async () => {
+    const spy = vi.spyOn(tasksApi, "updateDescription").mockResolvedValue(undefined);
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useUpdateDescription(agencyId), { wrapper: Wrapper });
+    result.current.mutate(payload);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(spy).toHaveBeenCalledWith(tasks[0].id, "Fix the login flow");
+  });
+
+  it("calls updateDescription with null when description is cleared", async () => {
+    const spy = vi.spyOn(tasksApi, "updateDescription").mockResolvedValue(undefined);
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useUpdateDescription(agencyId), { wrapper: Wrapper });
+    result.current.mutate({ taskId: tasks[0].id, description: null });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(spy).toHaveBeenCalledWith(tasks[0].id, null);
+  });
+
+  it("invalidates the task cache for the agency on success", async () => {
+    vi.spyOn(tasksApi, "updateDescription").mockResolvedValue(undefined);
+    vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
+    const { queryClient, Wrapper } = makeWrapper();
+
+    await queryClient.prefetchQuery({
+      queryKey: ["tasks", agencyId],
+      queryFn: () => tasksApi.listTasks(agencyId),
+    });
+    expect(queryClient.getQueryState(["tasks", agencyId])?.isInvalidated).toBe(false);
+
+    const { result } = renderHook(() => useUpdateDescription(agencyId), { wrapper: Wrapper });
+    result.current.mutate(payload);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(queryClient.getQueryState(["tasks", agencyId])?.isInvalidated).toBe(true);
+  });
+
+  it("exposes isError when updateDescription rejects", async () => {
+    vi.spyOn(tasksApi, "updateDescription").mockRejectedValue(new Error("not found"));
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useUpdateDescription(agencyId), { wrapper: Wrapper });
+    result.current.mutate(payload);
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe("useUpdateDueDate", () => {
+  const payload = { taskId: tasks[0].id, dueDate: "2024-03-15" };
+
+  it("calls updateDueDate with the task id and date", async () => {
+    const spy = vi.spyOn(tasksApi, "updateDueDate").mockResolvedValue(undefined);
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useUpdateDueDate(agencyId), { wrapper: Wrapper });
+    result.current.mutate(payload);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(spy).toHaveBeenCalledWith(tasks[0].id, "2024-03-15");
+  });
+
+  it("calls updateDueDate with null when the date is cleared", async () => {
+    const spy = vi.spyOn(tasksApi, "updateDueDate").mockResolvedValue(undefined);
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useUpdateDueDate(agencyId), { wrapper: Wrapper });
+    result.current.mutate({ taskId: tasks[0].id, dueDate: null });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(spy).toHaveBeenCalledWith(tasks[0].id, null);
+  });
+
+  it("invalidates the task cache for the agency on success", async () => {
+    vi.spyOn(tasksApi, "updateDueDate").mockResolvedValue(undefined);
+    vi.spyOn(tasksApi, "listTasks").mockResolvedValue(tasks);
+    const { queryClient, Wrapper } = makeWrapper();
+
+    await queryClient.prefetchQuery({
+      queryKey: ["tasks", agencyId],
+      queryFn: () => tasksApi.listTasks(agencyId),
+    });
+    expect(queryClient.getQueryState(["tasks", agencyId])?.isInvalidated).toBe(false);
+
+    const { result } = renderHook(() => useUpdateDueDate(agencyId), { wrapper: Wrapper });
+    result.current.mutate(payload);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(queryClient.getQueryState(["tasks", agencyId])?.isInvalidated).toBe(true);
+  });
+
+  it("exposes isError when updateDueDate rejects", async () => {
+    vi.spyOn(tasksApi, "updateDueDate").mockRejectedValue(new Error("not found"));
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useUpdateDueDate(agencyId), { wrapper: Wrapper });
     result.current.mutate(payload);
 
     await waitFor(() => expect(result.current.isError).toBe(true));

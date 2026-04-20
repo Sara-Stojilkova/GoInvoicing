@@ -47,3 +47,17 @@ export function completeTask(id: string): Promise<void> {
 export function setTaskInProgress(id: string): Promise<void> {
   return request<void>(`/api/tasks/${id}/set-in-progress`, { method: "POST" });
 }
+
+export function updateDescription(id: string, description: string | null): Promise<void> {
+  return request<void>(`/api/tasks/${id}/description`, {
+    method: "PATCH",
+    body: JSON.stringify({ description }),
+  });
+}
+
+export function updateDueDate(id: string, dueDate: string | null): Promise<void> {
+  return request<void>(`/api/tasks/${id}/due-date`, {
+    method: "PATCH",
+    body: JSON.stringify({ due_date: dueDate }),
+  });
+}

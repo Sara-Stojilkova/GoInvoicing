@@ -446,6 +446,144 @@ func TestTaskHandlerComplete(t *testing.T) {
 	}
 }
 
+// --- UpdateDescription ---
+
+func TestTaskHandlerUpdateDescription(t *testing.T) {
+	agencyA := uuid.New()
+
+	tests := []struct {
+		name       string
+		idStr      func(*services.TaskService) string
+		body       string
+		wantStatus int
+	}{
+		{
+			name:       "invalid task uuid",
+			idStr:      func(*services.TaskService) string { return "not-a-uuid" },
+			body:       `{"description":"Fix the login flow"}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "malformed json",
+			idStr:      func(*services.TaskService) string { return uuid.New().String() },
+			body:       `{bad}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "task not found",
+			idStr:      func(*services.TaskService) string { return uuid.New().String() },
+			body:       `{"description":"Fix the login flow"}`,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name: "success — sets description",
+			idStr: func(svc *services.TaskService) string {
+				return mustCreateTask(t, svc, agencyA).ID.String()
+			},
+			body:       `{"description":"Fix the login flow"}`,
+			wantStatus: http.StatusNoContent,
+		},
+		{
+			name: "success — clears description",
+			idStr: func(svc *services.TaskService) string {
+				return mustCreateTask(t, svc, agencyA).ID.String()
+			},
+			body:       `{"description":null}`,
+			wantStatus: http.StatusNoContent,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := newTaskService()
+			idStr := tt.idStr(svc)
+			h := NewTaskHandler(svc)
+
+			r := httptest.NewRequest(http.MethodPatch, "/api/tasks/"+idStr+"/description", strings.NewReader(tt.body))
+			r.Header.Set("Content-Type", "application/json")
+			r = withChiParam(r, "id", idStr)
+			w := httptest.NewRecorder()
+			h.UpdateDescription(w, r)
+
+			if w.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d (body: %s)", w.Code, tt.wantStatus, w.Body.String())
+			}
+		})
+	}
+}
+
+// --- UpdateDueDate ---
+
+func TestTaskHandlerUpdateDueDate(t *testing.T) {
+	agencyA := uuid.New()
+
+	tests := []struct {
+		name       string
+		idStr      func(*services.TaskService) string
+		body       string
+		wantStatus int
+	}{
+		{
+			name:       "invalid task uuid",
+			idStr:      func(*services.TaskService) string { return "not-a-uuid" },
+			body:       `{"due_date":"2026-06-01"}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "malformed json",
+			idStr:      func(*services.TaskService) string { return uuid.New().String() },
+			body:       `{bad}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "invalid date format",
+			idStr:      func(*services.TaskService) string { return uuid.New().String() },
+			body:       `{"due_date":"06/01/2026"}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "task not found",
+			idStr:      func(*services.TaskService) string { return uuid.New().String() },
+			body:       `{"due_date":"2026-06-01"}`,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name: "success — sets a due date",
+			idStr: func(svc *services.TaskService) string {
+				return mustCreateTask(t, svc, agencyA).ID.String()
+			},
+			body:       `{"due_date":"2026-06-01"}`,
+			wantStatus: http.StatusNoContent,
+		},
+		{
+			name: "success — clears the due date",
+			idStr: func(svc *services.TaskService) string {
+				return mustCreateTask(t, svc, agencyA).ID.String()
+			},
+			body:       `{"due_date":null}`,
+			wantStatus: http.StatusNoContent,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := newTaskService()
+			idStr := tt.idStr(svc)
+			h := NewTaskHandler(svc)
+
+			r := httptest.NewRequest(http.MethodPatch, "/api/tasks/"+idStr+"/due-date", strings.NewReader(tt.body))
+			r.Header.Set("Content-Type", "application/json")
+			r = withChiParam(r, "id", idStr)
+			w := httptest.NewRecorder()
+			h.UpdateDueDate(w, r)
+
+			if w.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d (body: %s)", w.Code, tt.wantStatus, w.Body.String())
+			}
+		})
+	}
+}
+
 // --- SetInProgress ---
 
 func TestTaskHandlerSetInProgress(t *testing.T) {
