@@ -181,6 +181,33 @@ func (h *TaskHandler) Unassign(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+type updateDescriptionRequest struct {
+	Description *string `json:"description"`
+}
+
+// PATCH /tasks/{id}/description
+func (h *TaskHandler) UpdateDescription(w http.ResponseWriter, r *http.Request) {
+	taskID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		api.WriteError(w, http.StatusBadRequest, "invalid task id")
+		return
+	}
+	var req updateDescriptionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		api.WriteError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if err := h.svc.UpdateDescription(r.Context(), taskID, req.Description); err != nil {
+		if errors.Is(err, apperrors.ErrNotFound) {
+			api.WriteError(w, http.StatusNotFound, "task not found")
+			return
+		}
+		api.WriteError(w, http.StatusInternalServerError, "failed to update description")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 type updateDueDateRequest struct {
 	DueDate *string `json:"due_date"` // "YYYY-MM-DD" or null
 }

@@ -566,6 +566,23 @@ code {
   }
 }
 
+.detail-description-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 15px;
+  font-family: var(--sans);
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
 .detail-date-input--hidden {
   position: absolute;
   width: 1px;

@@ -1,7 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useTask, useCompleteTask, useAssignTask, useSetInProgress, useUpdateDueDate } from "../hooks/useTasks";
+import { useTask, useCompleteTask, useAssignTask, useSetInProgress, useUpdateDueDate, useUpdateDescription } from "../hooks/useTasks";
 import { useUsers } from "../hooks/useUsers";
 import { useAgency } from "../hooks/useAgency";
 import { StatusBadge } from "../component/StatusBadge";
@@ -31,7 +31,9 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   const { mutate: setInProgress } = useSetInProgress(agencyId);
   const { mutate: assign } = useAssignTask(agencyId);
   const { mutate: updateDueDate } = useUpdateDueDate(agencyId);
+  const { mutate: updateDescription } = useUpdateDescription(agencyId);
   const dueDateRef = useRef<HTMLInputElement>(null);
+  const [editingDescription, setEditingDescription] = useState(false);
 
   if (isLoading) {
     return (
@@ -123,9 +125,35 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
             : <span className="detail-field__empty">Not completed</span>}
         </Field>
         <Field label="Description">
-          {task.description
-            ? task.description
-            : <span className="detail-field__empty">No description</span>}
+          <button
+            type="button"
+            className="detail-date-btn"
+            aria-label="Edit description"
+            onClick={() => setEditingDescription(true)}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          {editingDescription ? (
+            <textarea
+              key={task.description}
+              aria-label="Description"
+              className="detail-description-input"
+              defaultValue={task.description ?? ""}
+              autoFocus
+              onBlur={(e) => {
+                const value = e.target.value || null;
+                updateDescription({ taskId: task.id, description: value });
+                setEditingDescription(false);
+              }}
+            />
+          ) : (
+            task.description
+              ? task.description
+              : <span className="detail-field__empty">No description</span>
+          )}
         </Field>
       </dl>
       <div className="detail-actions">
