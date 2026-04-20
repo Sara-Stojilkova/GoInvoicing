@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useTasks } from "../hooks/useTasks";
+import { useUsers } from "../hooks/useUsers";
 import { TaskRow } from "../component/TaskRow";
 import { SummaryCards } from "../component/SummaryCards";
 import type { StatusFilter } from "../component/SummaryCards";
@@ -8,6 +9,7 @@ import { CreateTaskForm } from "../component/CreateTaskForm";
 
 export function TaskListPage({ agencyId }: { agencyId: string }) {
   const { data: tasks, isLoading, isError, error, refetch } = useTasks(agencyId);
+  const { data: users = [] } = useUsers(agencyId);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const visible = useMemo(
@@ -40,47 +42,39 @@ export function TaskListPage({ agencyId }: { agencyId: string }) {
 
   return (
     <div className="task-list-page">
-      <div className="page-header">
-        <h1 className="page-title">Tasks</h1>
+      <div className="task-list-body">
+        <div className="task-list-left">
+          <section className="page-section">
+            <SummaryCards
+              tasks={tasks ?? []}
+              activeFilter={statusFilter}
+              onFilterChange={setStatusFilter}
+            />
+          </section>
+
+          <section className="task-list-section">
+            <h2 className="section-title">Task list</h2>
+            {visible.length === 0 ? (
+              <p className="empty-state">No tasks found.</p>
+            ) : (
+              <table className="task-table">
+                <tbody>
+                  {visible.map((task) => (
+                    <tr key={task.id}>
+                      <TaskRow task={task} users={users} />
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+        </div>
+
+        <aside className="task-form-aside">
+          <h2 className="section-title">New task</h2>
+          <CreateTaskForm agencyId={agencyId} />
+        </aside>
       </div>
-
-      <section className="page-section">
-        <SummaryCards
-          tasks={tasks ?? []}
-          activeFilter={statusFilter}
-          onFilterChange={setStatusFilter}
-        />
-      </section>
-
-      <section className="page-section">
-        <h2 className="section-title">Task list</h2>
-        {visible.length === 0 ? (
-          <p className="empty-state">No tasks found.</p>
-        ) : (
-          <table className="task-table">
-            <thead>
-              <tr>
-                <th>Task</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((task) => (
-                <tr key={task.id}>
-                  <TaskRow task={task} />
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-
-      <section className="page-section page-section--form">
-        <h2 className="section-title">New task</h2>
-        <CreateTaskForm agencyId={agencyId} />
-      </section>
     </div>
   );
 }
