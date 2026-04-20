@@ -205,20 +205,18 @@ describe("TaskDetailPage", () => {
       expect(screen.getByText(/unassigned/i)).toBeInTheDocument();
     });
 
-    it("renders the due date in the date input when present", async () => {
+    it("renders the formatted due date when present", async () => {
       mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      const input = screen.getByLabelText(/due date/i) as HTMLInputElement;
-      expect(input.value).toBe("2024-02-01");
+      expect(screen.getByText(/feb.*1.*2024|2024.*02.*01/i)).toBeInTheDocument();
     });
 
-    it("renders an empty date input when due_date is null", async () => {
+    it("shows no due date text when due_date is null", async () => {
       mockApis(minimalTask);
       renderPage();
       await waitFor(() => screen.getByText("Minimal task"));
-      const input = screen.getByLabelText(/due date/i) as HTMLInputElement;
-      expect(input.value).toBe("");
+      expect(screen.getByText(/no due date/i)).toBeInTheDocument();
     });
 
     it("renders the completed_at date when present", async () => {
@@ -277,7 +275,7 @@ describe("TaskDetailPage", () => {
       mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByLabelText(/due date/i)).toBeInTheDocument();
+      expect(screen.getByLabelText("due-date-input")).toBeInTheDocument();
     });
 
     it("pre-populates the date input with the current due date", async () => {
@@ -285,7 +283,7 @@ describe("TaskDetailPage", () => {
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
       // fullTask.due_date = "2024-02-01T00:00:00Z" → YYYY-MM-DD = "2024-02-01"
-      const input = screen.getByLabelText(/due date/i) as HTMLInputElement;
+      const input = screen.getByLabelText("due-date-input") as HTMLInputElement;
       expect(input.value).toBe("2024-02-01");
     });
 
@@ -293,7 +291,7 @@ describe("TaskDetailPage", () => {
       mockApis(minimalTask);
       renderPage();
       await waitFor(() => screen.getByText("Minimal task"));
-      const input = screen.getByLabelText(/due date/i) as HTMLInputElement;
+      const input = screen.getByLabelText("due-date-input") as HTMLInputElement;
       expect(input.value).toBe("");
     });
 
@@ -302,7 +300,7 @@ describe("TaskDetailPage", () => {
       mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      const input = screen.getByLabelText(/due date/i);
+      const input = screen.getByLabelText("due-date-input");
       await userEvent.clear(input);
       await userEvent.type(input, "2024-03-15");
       input.blur();
@@ -316,7 +314,7 @@ describe("TaskDetailPage", () => {
       mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      const input = screen.getByLabelText(/due date/i);
+      const input = screen.getByLabelText("due-date-input");
       await userEvent.clear(input);
       input.blur();
       await waitFor(() =>

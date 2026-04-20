@@ -508,6 +508,7 @@ code {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  position: relative;
 }
 
 .detail-field:last-child {
@@ -535,30 +536,42 @@ code {
   font-style: italic;
 }
 
-.detail-date-input {
-  height: 34px;
-  width: 100%;
-  padding: 0 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text-h);
-  font-size: 14px;
-  font-family: var(--sans);
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
+.detail-date-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-  &:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-bg);
-  }
+.detail-date-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  border: none;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
 
-  /* tint the calendar icon to match the muted text colour */
-  color-scheme: light;
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
+  &:hover {
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--accent-bg);
   }
+}
+
+.detail-date-input--hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .detail-actions {
