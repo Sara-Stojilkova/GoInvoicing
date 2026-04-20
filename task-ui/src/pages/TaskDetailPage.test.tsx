@@ -270,6 +270,71 @@ describe("TaskDetailPage", () => {
     });
   });
 
+  describe("description", () => {
+    it("renders an edit button for the description field", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByRole("button", { name: /edit description/i })).toBeInTheDocument();
+    });
+
+    it("shows the description text when present", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      expect(screen.getByText(fullTask.description!)).toBeInTheDocument();
+    });
+
+    it("shows no description text when description is null", async () => {
+      mockApis(minimalTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Minimal task"));
+      expect(screen.getByText(/no description/i)).toBeInTheDocument();
+    });
+
+    it("clicking the edit button reveals a textarea", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.click(screen.getByRole("button", { name: /edit description/i }));
+      expect(screen.getByRole("textbox", { name: /description/i })).toBeInTheDocument();
+    });
+
+    it("textarea is pre-populated with the current description", async () => {
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.click(screen.getByRole("button", { name: /edit description/i }));
+      const textarea = screen.getByRole("textbox", { name: /description/i }) as HTMLTextAreaElement;
+      expect(textarea.value).toBe(fullTask.description);
+    });
+
+    it("calls updateDescription when the textarea loses focus with a new value", async () => {
+      const spy = vi.spyOn(tasksApi, "updateDescription").mockResolvedValue(undefined);
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.click(screen.getByRole("button", { name: /edit description/i }));
+      const textarea = screen.getByRole("textbox", { name: /description/i });
+      await userEvent.clear(textarea);
+      await userEvent.type(textarea, "New description text");
+      textarea.blur();
+      await waitFor(() => expect(spy).toHaveBeenCalledWith(taskId, "New description text"));
+    });
+
+    it("calls updateDescription with null when textarea is cleared", async () => {
+      const spy = vi.spyOn(tasksApi, "updateDescription").mockResolvedValue(undefined);
+      mockApis(fullTask);
+      renderPage();
+      await waitFor(() => screen.getByText("Fix login bug"));
+      await userEvent.click(screen.getByRole("button", { name: /edit description/i }));
+      const textarea = screen.getByRole("textbox", { name: /description/i });
+      await userEvent.clear(textarea);
+      textarea.blur();
+      await waitFor(() => expect(spy).toHaveBeenCalledWith(taskId, null));
+    });
+  });
+
   describe("due date", () => {
     it("renders a date input for the due date field", async () => {
       mockApis(fullTask);

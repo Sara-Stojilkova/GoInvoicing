@@ -442,6 +442,86 @@ func TestListOverdue(t *testing.T) {
 	}
 }
 
+func TestUpdateDescription(t *testing.T) {
+	agencyID := uuid.New()
+	desc := "Fix the login flow"
+	other := "Update the README"
+
+	tests := []struct {
+		name    string
+		setup   func(svc *services.TaskService) uuid.UUID
+		input   *string
+		want    *string
+		wantErr error
+	}{
+		{
+			name: "sets description on a task with none",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				return task.ID
+			},
+			input: &desc,
+			want:  &desc,
+		},
+		{
+			name: "overwrites an existing description",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, &desc, nil, nil)
+				return task.ID
+			},
+			input: &other,
+			want:  &other,
+		},
+		{
+			name: "clears description when passed nil",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, &desc, nil, nil)
+				return task.ID
+			},
+			input: nil,
+			want:  nil,
+		},
+		{
+			name: "not found",
+			setup: func(svc *services.TaskService) uuid.UUID {
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				id := task.ID
+				id[0] ^= 0xFF
+				return id
+			},
+			input:   &desc,
+			wantErr: apperrors.ErrNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := newTaskService()
+			taskID := tt.setup(svc)
+			err := svc.UpdateDescription(ctx, taskID, tt.input)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("UpdateDescription() error = %v, want %v", err, tt.wantErr)
+			}
+			if tt.wantErr != nil {
+				return
+			}
+			task, _ := svc.GetTask(ctx, taskID, agencyID)
+			if tt.want == nil {
+				if task.Description != nil {
+					t.Errorf("UpdateDescription() Description = %q, want nil", *task.Description)
+				}
+			} else {
+				if task.Description == nil {
+					t.Fatal("UpdateDescription() Description is nil, want non-nil")
+				}
+				if *task.Description != *tt.want {
+					t.Errorf("UpdateDescription() Description = %q, want %q", *task.Description, *tt.want)
+				}
+			}
+		})
+	}
+}
+
 func TestSetDueDate(t *testing.T) {
 	agencyID := uuid.New()
 	date := now.Add(7 * 24 * time.Hour)

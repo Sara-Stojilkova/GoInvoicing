@@ -207,6 +207,41 @@ func TestSetInProgress(t *testing.T) {
 	}
 }
 
+func TestSetDescription(t *testing.T) {
+	desc := "Fix the login flow"
+	other := "Update the README"
+
+	tests := []struct {
+		name    string
+		task    Task
+		input   *string
+		want    *string
+	}{
+		{"sets description on a task with none", Task{ID: uuid.New()}, &desc, &desc},
+		{"overwrites an existing description", Task{ID: uuid.New(), Description: &desc}, &other, &other},
+		{"clears description when passed nil", Task{ID: uuid.New(), Description: &desc}, nil, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			task := tt.task
+			task.SetDescription(tt.input)
+			if tt.want == nil {
+				if task.Description != nil {
+					t.Errorf("SetDescription() Description = %q, want nil", *task.Description)
+				}
+			} else {
+				if task.Description == nil {
+					t.Fatal("SetDescription() Description is nil, want non-nil")
+				}
+				if *task.Description != *tt.want {
+					t.Errorf("SetDescription() Description = %q, want %q", *task.Description, *tt.want)
+				}
+			}
+		})
+	}
+}
+
 func TestSetDueDate(t *testing.T) {
 	date := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
 	other := time.Date(2026, 9, 15, 0, 0, 0, 0, time.UTC)
