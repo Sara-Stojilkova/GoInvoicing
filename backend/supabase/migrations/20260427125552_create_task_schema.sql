@@ -47,3 +47,12 @@ create trigger tasks_updated_at
   before update on tasks
   for each row execute function update_updated_at();
 
+-- Indexes
+create index tasks_agency_id_idx        on tasks(agency_id);
+create index tasks_assigned_to_idx      on tasks(assigned_to);
+create index tasks_status_idx           on tasks(status);
+create index users_agency_id_idx        on users(agency_id);
+-- Partial indexes so active-record lookups never scan deleted rows
+create index agencies_active_idx        on agencies(id) where deleted_at is null;
+create index users_active_idx           on users(id)   where deleted_at is null;
+
