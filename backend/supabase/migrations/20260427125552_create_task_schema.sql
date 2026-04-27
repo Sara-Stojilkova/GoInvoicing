@@ -22,7 +22,7 @@ create table users (
 -- Tasks
 create table tasks (
   id          uuid primary key default gen_random_uuid(),
-  agency_id   uuid not null references agencies(id) on delete cascade,
+  agency_id   uuid not null references agencies(id) on delete restrict,
   created_by  uuid not null references users(id) on delete restrict,
   assigned_to uuid references users(id) on delete set null,
   title       text not null,
