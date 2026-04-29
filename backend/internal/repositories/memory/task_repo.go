@@ -57,3 +57,13 @@ func (r *taskRepo) Update(ctx context.Context, task *domain.Task) error {
 	r.tasks[task.ID] = task
 	return nil
 }
+
+func (r *taskRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, ok := r.tasks[id]; !ok {
+		return fmt.Errorf("task %s: %w", id, apperrors.ErrNotFound)
+	}
+	delete(r.tasks, id)
+	return nil
+}
