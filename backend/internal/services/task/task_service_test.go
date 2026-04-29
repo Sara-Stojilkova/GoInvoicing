@@ -47,7 +47,7 @@ func TestCreateTask(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := newTaskService()
-			task, err := svc.Create(ctx, tt.title, tt.priority, tt.agencyID, tt.description, tt.asigneeId, tt.dueDate)
+			task, err := svc.Create(ctx, tt.title, tt.priority, tt.agencyID, uuid.New(), tt.description, tt.asigneeId, tt.dueDate)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -112,7 +112,7 @@ func TestAssignTask(t *testing.T) {
 		{
 			name: "success — same agency",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, uuid.New(), nil, nil, nil)
 				return task.ID
 			},
 			assigneeID:       assigneeID,
@@ -122,7 +122,7 @@ func TestAssignTask(t *testing.T) {
 		{
 			name: "forbidden — different agency",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, uuid.New(), nil, nil, nil)
 				return task.ID
 			},
 			assigneeID:       assigneeID,
@@ -132,7 +132,7 @@ func TestAssignTask(t *testing.T) {
 		{
 			name: "not found",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, uuid.New(), nil, nil, nil)
 				id := task.ID
 				id[0] ^= 0xFF
 				return id
@@ -167,7 +167,7 @@ func TestUnassignTask(t *testing.T) {
 		{
 			name: "success — clears assignee",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, &assigneeID, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, &assigneeID, nil)
 				return task.ID
 			},
 			wantErr: nil,
@@ -175,7 +175,7 @@ func TestUnassignTask(t *testing.T) {
 		{
 			name: "success — unassigning already unassigned task",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				return task.ID
 			},
 			wantErr: nil,
@@ -183,7 +183,7 @@ func TestUnassignTask(t *testing.T) {
 		{
 			name: "not found",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				id := task.ID
 				id[0] ^= 0xFF
 				return id
@@ -227,7 +227,7 @@ func TestCompleteTask(t *testing.T) {
 		{
 			name: "success",
 			setup: func(svc *services.TaskService) (uuid.UUID, uuid.UUID) {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				return task.ID, task.AgencyID
 			},
 			wantErr:         nil,
@@ -237,7 +237,7 @@ func TestCompleteTask(t *testing.T) {
 		{
 			name: "not found",
 			setup: func(svc *services.TaskService) (uuid.UUID, uuid.UUID) {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				id := task.ID
 				id[0] ^= 0xFF
 				return id, task.AgencyID
@@ -247,7 +247,7 @@ func TestCompleteTask(t *testing.T) {
 		{
 			name: "already done",
 			setup: func(svc *services.TaskService) (uuid.UUID, uuid.UUID) {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				svc.CompleteTask(ctx, task.ID, now)
 				return task.ID, task.AgencyID
 			},
@@ -293,7 +293,7 @@ func TestGetTask(t *testing.T) {
 		{
 			name: "success — same agency",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, uuid.New(), nil, nil, nil)
 				return task.ID
 			},
 			requesterAgency: agencyA,
@@ -302,7 +302,7 @@ func TestGetTask(t *testing.T) {
 		{
 			name: "forbidden — different agency",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, uuid.New(), nil, nil, nil)
 				return task.ID
 			},
 			requesterAgency: agencyB,
@@ -311,7 +311,7 @@ func TestGetTask(t *testing.T) {
 		{
 			name: "not found",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyA, uuid.New(), nil, nil, nil)
 				id := task.ID
 				id[0] ^= 0xFF
 				return id
@@ -355,9 +355,9 @@ func TestListByAgency(t *testing.T) {
 		{
 			name: "only returns tasks from requested agency",
 			setup: func(svc *services.TaskService) {
-				svc.Create(ctx, "Task 1", "high", agencyA, nil, nil, nil)
-				svc.Create(ctx, "Task 2", "medium", agencyA, nil, nil, nil)
-				svc.Create(ctx, "Task 3", "low", agencyB, nil, nil, nil)
+				svc.Create(ctx, "Task 1", "high", agencyA, uuid.New(), nil, nil, nil)
+				svc.Create(ctx, "Task 2", "medium", agencyA, uuid.New(), nil, nil, nil)
+				svc.Create(ctx, "Task 3", "low", agencyB, uuid.New(), nil, nil, nil)
 			},
 			agencyID:  agencyA,
 			wantCount: 2,
@@ -394,7 +394,7 @@ func TestListOverdue(t *testing.T) {
 		{
 			name: "overdue task appears",
 			setup: func(svc *services.TaskService) {
-				svc.Create(ctx, "Overdue task", "high", agencyA, nil, nil, &past)
+				svc.Create(ctx, "Overdue task", "high", agencyA, uuid.New(), nil, nil, &past)
 			},
 			agencyID:  agencyA,
 			wantCount: 1,
@@ -402,7 +402,7 @@ func TestListOverdue(t *testing.T) {
 		{
 			name: "future task does not appear",
 			setup: func(svc *services.TaskService) {
-				svc.Create(ctx, "Future task", "low", agencyA, nil, nil, &future)
+				svc.Create(ctx, "Future task", "low", agencyA, uuid.New(), nil, nil, &future)
 			},
 			agencyID:  agencyA,
 			wantCount: 0,
@@ -410,7 +410,7 @@ func TestListOverdue(t *testing.T) {
 		{
 			name: "completed task is not overdue",
 			setup: func(svc *services.TaskService) {
-				task, _ := svc.Create(ctx, "Done task", "medium", agencyA, nil, nil, &past)
+				task, _ := svc.Create(ctx, "Done task", "medium", agencyA, uuid.New(), nil, nil, &past)
 				svc.CompleteTask(ctx, task.ID, now)
 			},
 			agencyID:  agencyA,
@@ -419,8 +419,8 @@ func TestListOverdue(t *testing.T) {
 		{
 			name: "only returns overdue tasks from requested agency",
 			setup: func(svc *services.TaskService) {
-				svc.Create(ctx, "Agency A task", "high", agencyA, nil, nil, &past)
-				svc.Create(ctx, "Agency B task", "high", agencyB, nil, nil, &past)
+				svc.Create(ctx, "Agency A task", "high", agencyA, uuid.New(), nil, nil, &past)
+				svc.Create(ctx, "Agency B task", "high", agencyB, uuid.New(), nil, nil, &past)
 			},
 			agencyID:  agencyA,
 			wantCount: 1,
@@ -457,7 +457,7 @@ func TestUpdateDescription(t *testing.T) {
 		{
 			name: "sets description on a task with none",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				return task.ID
 			},
 			input: &desc,
@@ -466,7 +466,7 @@ func TestUpdateDescription(t *testing.T) {
 		{
 			name: "overwrites an existing description",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, &desc, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), &desc, nil, nil)
 				return task.ID
 			},
 			input: &other,
@@ -475,7 +475,7 @@ func TestUpdateDescription(t *testing.T) {
 		{
 			name: "clears description when passed nil",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, &desc, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), &desc, nil, nil)
 				return task.ID
 			},
 			input: nil,
@@ -484,7 +484,7 @@ func TestUpdateDescription(t *testing.T) {
 		{
 			name: "not found",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				id := task.ID
 				id[0] ^= 0xFF
 				return id
@@ -537,7 +537,7 @@ func TestSetDueDate(t *testing.T) {
 		{
 			name: "sets a due date on a task with none",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				return task.ID
 			},
 			dueDate:     &date,
@@ -546,7 +546,7 @@ func TestSetDueDate(t *testing.T) {
 		{
 			name: "overwrites an existing due date",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, &date)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, &date)
 				return task.ID
 			},
 			dueDate:     &other,
@@ -555,7 +555,7 @@ func TestSetDueDate(t *testing.T) {
 		{
 			name: "clears the due date when passed nil",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, &date)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, &date)
 				return task.ID
 			},
 			dueDate:     nil,
@@ -564,7 +564,7 @@ func TestSetDueDate(t *testing.T) {
 		{
 			name: "not found",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				id := task.ID
 				id[0] ^= 0xFF
 				return id
@@ -615,7 +615,7 @@ func TestSetInProgress(t *testing.T) {
 		{
 			name: "todo task transitions to in_progress",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				return task.ID
 			},
 			wantStatus: "in_progress",
@@ -624,7 +624,7 @@ func TestSetInProgress(t *testing.T) {
 		{
 			name: "not found",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				id := task.ID
 				id[0] ^= 0xFF
 				return id
@@ -635,7 +635,7 @@ func TestSetInProgress(t *testing.T) {
 		{
 			name: "already in_progress stays unchanged",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, nil)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
 				svc.SetInProgress(ctx, task.ID)
 				return task.ID
 			},
@@ -645,7 +645,7 @@ func TestSetInProgress(t *testing.T) {
 		{
 			name: "done task transitions to in_progress with nil CompletedAt",
 			setup: func(svc *services.TaskService) uuid.UUID {
-				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, nil, nil, &past)
+				task, _ := svc.Create(ctx, "Fix bug", "high", agencyID, uuid.New(), nil, nil, &past)
 				svc.CompleteTask(ctx, task.ID, now)
 				return task.ID
 			},
