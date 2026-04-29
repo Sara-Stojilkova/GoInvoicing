@@ -70,13 +70,10 @@ func main() {
 	invoiceRepo := memory.NewInvoiceRepo()
 	taskRepo := postgres.NewTaskRepo(pool)
 	userRepo := memory.NewUserRepo()
-	agencyRepo := memory.NewAgencyRepo()
+	agencyRepo := postgres.NewAgencyRepo(pool)
 
 	// Seed in-memory data
 	seedData := seed.Generate()
-	for i := range seedData.Agencies {
-		agencyRepo.Create(ctx, &seedData.Agencies[i])
-	}
 	for i := range seedData.Users {
 		userRepo.Create(ctx, &seedData.Users[i])
 	}
