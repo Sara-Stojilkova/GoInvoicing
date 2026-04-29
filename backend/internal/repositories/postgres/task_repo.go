@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -41,7 +42,7 @@ func (r *taskRepo) Create(ctx context.Context, task *domain.Task) error {
 		task.CompletedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("create task: %w", err)
+		return fmt.Errorf("create task: %w", mapErr(err))
 	}
 	return nil
 }
@@ -55,10 +56,7 @@ func (r *taskRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.Task, err
 
 	t, err := scanTask(row)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("task %s: %w", id, apperrors.ErrNotFound)
-		}
-		return nil, fmt.Errorf("get task %s: %w", id, err)
+		return nil, fmt.Errorf("task %s: %w", id, mapErr(err))
 	}
 	return t, nil
 }
@@ -123,6 +121,17 @@ func (r *taskRepo) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("task %s: %w", id, apperrors.ErrNotFound)
 	}
 	return nil
+}
+
+func mapErr(err error) error {
+	if errors.Is(err, pgx.ErrNoRows) {
+		return apperrors.ErrNotFound
+	}
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return apperrors.ErrConflict
+	}
+	return err
 }
 
 // scanTask works with both pgx.Row and pgx.Rows.
