@@ -1,27 +1,18 @@
-export interface Agency {
-  id: string;
-  name: string;
-  created_at: string;
-}
+import type { Database } from "../database.types";
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "member";
-  agency_id: string;
-  created_at: string;
-}
+type Tables<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Row"];
 
-export interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  status: "todo" | "in_progress" | "done";
-  priority: "low" | "medium" | "high";
-  agency_id: string;
-  assignee_id: string | null;
-  created_at: string;
-  due_date: string | null;
-  completed_at: string | null;
-}
+export type Agency = Tables<"agencies">;
+export type Task = Tables<"tasks">;
+
+// public.users holds profile data only; email and role live in auth.users / JWT.
+export type User = Tables<"users">;
+
+// Convenience re-exports for the enum types
+export type TaskStatus = Database["public"]["Enums"]["task_status"];
+export type TaskPriority = Database["public"]["Enums"]["task_priority"];
+
+// Utility types for insert/update operations
+export type TaskInsert = Database["public"]["Tables"]["tasks"]["Insert"];
+export type TaskUpdate = Database["public"]["Tables"]["tasks"]["Update"];
