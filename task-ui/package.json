@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "gen:types": "supabase gen types typescript --linked > src/database.types.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
