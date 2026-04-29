@@ -14,6 +14,7 @@ import (
 	taskAPI "backend/api/task"
 	userAPI "backend/api/user"
 	"backend/internal/repositories/memory"
+	"backend/internal/repositories/postgres"
 	seed "backend/internal/seed"
 	agencyServices "backend/internal/services/agency"
 	invoiceServices "backend/internal/services/invoice"
@@ -22,6 +23,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func cors(origin string) func(http.Handler) http.Handler {
@@ -47,23 +49,36 @@ func allowedOrigin() string {
 }
 
 func main() {
+	ctx := context.Background()
+
+	// Database
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		log.Fatal("DATABASE_URL is required")
+	}
+	pool, err := pgxpool.New(ctx, dbURL)
+	if err != nil {
+		log.Fatalf("open db pool: %v", err)
+	}
+	defer pool.Close()
+	if err := pool.Ping(ctx); err != nil {
+		log.Fatalf("ping db: %v", err)
+	}
+	log.Println("connected to database")
+
 	// Repositories
 	invoiceRepo := memory.NewInvoiceRepo()
-	taskRepo := memory.NewTaskRepo()
+	taskRepo := postgres.NewTaskRepo(pool)
 	userRepo := memory.NewUserRepo()
 	agencyRepo := memory.NewAgencyRepo()
 
 	// Seed in-memory data
 	seedData := seed.Generate()
-	ctx := context.Background()
 	for i := range seedData.Agencies {
 		agencyRepo.Create(ctx, &seedData.Agencies[i])
 	}
 	for i := range seedData.Users {
 		userRepo.Create(ctx, &seedData.Users[i])
-	}
-	for i := range seedData.Tasks {
-		taskRepo.Create(ctx, &seedData.Tasks[i])
 	}
 
 	// Services
