@@ -15,7 +15,8 @@ type Task struct {
 	Description *string    `json:"description"` // nil = not set
 	Status      string     `json:"status"`      // "todo", "in_progress", "done"
 	Priority    string     `json:"priority"`    // "low", "medium", "high"
-	AgencyID    uuid.UUID  `json:"agency_id"`   // agency of the user who created this task
+	AgencyID    uuid.UUID  `json:"agency_id"`
+	CreatedBy   uuid.UUID  `json:"created_by"`
 	AssigneeID  *uuid.UUID `json:"assignee_id"` // nil = unassigned
 	CreatedAt   time.Time  `json:"created_at"`
 	DueDate     *time.Time `json:"due_date"`     // nil = no due date
