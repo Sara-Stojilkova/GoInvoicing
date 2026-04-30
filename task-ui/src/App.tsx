@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import './App.css'
+import { Header } from "./component/Header";
 
 const AGENCY_ID = "32ea87c0-23b8-4373-9cf9-b5164bd6a675";
 
@@ -10,6 +11,7 @@ const TaskDetailPage = lazy(() => import("./pages/TaskDetailPage").then(m => ({ 
 function App() {
   return (
     <BrowserRouter>
+      <Header />
       <Suspense fallback={<p>Loading...</p>}>
         <Routes>
           <Route path="/"                element={<TaskListPage   agencyId={AGENCY_ID} />} />
