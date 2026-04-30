@@ -27,9 +27,9 @@ func (r *taskRepo) Create(ctx context.Context, task *domain.Task) error {
 	_, err := r.db.Exec(ctx, `
 		insert into tasks
 			(id, agency_id, created_by, assigned_to, title, description,
-			 status, priority, due_date, completed_at)
+			 status, priority, due_date, completed_at, tags)
 		values
-			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
 		task.ID,
 		task.AgencyID,
 		task.CreatedBy,
@@ -40,6 +40,7 @@ func (r *taskRepo) Create(ctx context.Context, task *domain.Task) error {
 		task.Priority,
 		task.DueDate,
 		task.CompletedAt,
+		task.Tags,
 	)
 	if err != nil {
 		return fmt.Errorf("create task: %w", mapErr(err))
@@ -50,7 +51,7 @@ func (r *taskRepo) Create(ctx context.Context, task *domain.Task) error {
 func (r *taskRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.Task, error) {
 	row := r.db.QueryRow(ctx, `
 		select id, agency_id, created_by, assigned_to, title, description,
-		       status, priority, due_date, completed_at, created_at
+		       status, priority, due_date, completed_at, created_at, tags
 		from tasks
 		where id = $1`, id)
 
@@ -64,7 +65,7 @@ func (r *taskRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.Task, err
 func (r *taskRepo) List(ctx context.Context) ([]*domain.Task, error) {
 	rows, err := r.db.Query(ctx, `
 		select id, agency_id, created_by, assigned_to, title, description,
-		       status, priority, due_date, completed_at, created_at
+		       status, priority, due_date, completed_at, created_at, tags
 		from tasks
 		order by created_at desc`)
 	if err != nil {
@@ -92,8 +93,9 @@ func (r *taskRepo) Update(ctx context.Context, task *domain.Task) error {
 		    status       = $4,
 		    priority     = $5,
 		    due_date     = $6,
-		    completed_at = $7
-		where id = $8`,
+		    completed_at = $7,
+		    tags         = $8
+		where id = $9`,
 		task.AssigneeID,
 		task.Title,
 		task.Description,
@@ -101,6 +103,7 @@ func (r *taskRepo) Update(ctx context.Context, task *domain.Task) error {
 		task.Priority,
 		task.DueDate,
 		task.CompletedAt,
+		task.Tags,
 		task.ID,
 	)
 	if err != nil {
@@ -153,6 +156,7 @@ func scanTask(s scanner) (*domain.Task, error) {
 		&t.DueDate,
 		&t.CompletedAt,
 		&t.CreatedAt,
+		&t.Tags,
 	)
 	if err != nil {
 		return nil, err

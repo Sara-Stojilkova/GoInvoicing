@@ -49,6 +49,7 @@ type createTaskRequest struct {
 	Description *string    `json:"description,omitempty"`
 	AssigneeID  *uuid.UUID `json:"assignee_id,omitempty"`
 	DueDate     *time.Time `json:"due_date,omitempty"`
+	Tags        []string   `json:"tags,omitempty"`
 }
 
 // POST /tasks
@@ -70,7 +71,7 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		api.WriteError(w, http.StatusBadRequest, "created_by is required")
 		return
 	}
-	task, err := h.svc.Create(r.Context(), req.Title, req.Priority, req.AgencyID, req.CreatedBy, req.Description, req.AssigneeID, req.DueDate)
+	task, err := h.svc.Create(r.Context(), req.Title, req.Priority, req.AgencyID, req.CreatedBy, req.Description, req.AssigneeID, req.DueDate, req.Tags)
 	if err != nil {
 		api.WriteError(w, http.StatusInternalServerError, "failed to create task")
 		return
@@ -266,6 +267,36 @@ func (h *TaskHandler) SetInProgress(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		api.WriteError(w, http.StatusInternalServerError, "failed to set task in progress")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+type updateTagsRequest struct {
+	Tags []string `json:"tags"`
+}
+
+// PATCH /tasks/{id}/tags
+func (h *TaskHandler) UpdateTags(w http.ResponseWriter, r *http.Request) {
+	taskID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		api.WriteError(w, http.StatusBadRequest, "invalid task id")
+		return
+	}
+	var req updateTagsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		api.WriteError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if req.Tags == nil {
+		req.Tags = []string{}
+	}
+	if err := h.svc.UpdateTags(r.Context(), taskID, req.Tags); err != nil {
+		if errors.Is(err, apperrors.ErrNotFound) {
+			api.WriteError(w, http.StatusNotFound, "task not found")
+			return
+		}
+		api.WriteError(w, http.StatusInternalServerError, "failed to update tags")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
