@@ -164,4 +164,37 @@ describe("CreateTaskForm", () => {
       expect.any(Object)
     );
   });
+
+  it("renders a tags input", () => {
+    render(<CreateTaskForm agencyId="a1" />);
+    expect(screen.getByPlaceholderText(/add a tag/i)).toBeInTheDocument();
+  });
+
+  it("submits with tags when tags are added", async () => {
+    render(<CreateTaskForm agencyId="a1" />);
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "My task" } });
+
+    const tagInput = screen.getByPlaceholderText(/add a tag/i);
+    fireEvent.change(tagInput, { target: { value: "bug" } });
+    fireEvent.keyDown(tagInput, { key: "Enter" });
+
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+
+    await waitFor(() => {
+      expect(mutate).toHaveBeenCalledWith(
+        expect.objectContaining({ tags: ["bug"] }),
+        expect.anything()
+      );
+    });
+  });
+
+  it("submits without tags when none added", async () => {
+    render(<CreateTaskForm agencyId="a1" />);
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "My task" } });
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+    await waitFor(() => {
+      const call = mutate.mock.calls[mutate.mock.calls.length - 1][0];
+      expect(call.tags).toBeUndefined();
+    });
+  });
 });
