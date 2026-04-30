@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useTask, useCompleteTask, useAssignTask, useSetInProgress, useUpdateDueDate, useUpdateDescription } from "../hooks/useTasks";
+import { useTask, useCompleteTask, useAssignTask, useSetInProgress, useUpdateDueDate, useUpdateDescription, useUpdateTags } from "../hooks/useTasks";
 import { useUsers } from "../hooks/useUsers";
 import { useAgency } from "../hooks/useAgency";
 import { StatusBadge } from "../component/StatusBadge";
 import { PriorityBadge } from "../component/PriorityBadge";
+import { TagsInput } from "../component/TagsInput";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -50,6 +51,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   const { mutate: assign } = useAssignTask(agencyId);
   const { mutate: updateDueDate } = useUpdateDueDate(agencyId);
   const { mutate: updateDescription } = useUpdateDescription(agencyId);
+  const { mutate: updateTags } = useUpdateTags(agencyId);
   const dueDateRef = useRef<HTMLInputElement>(null);
   const [editingDescription, setEditingDescription] = useState(false);
 
@@ -173,6 +175,13 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
                   }}
                 />
               </div>
+            </Prop>
+
+            <Prop label="Tags">
+              <TagsInput
+                value={task.tags ?? []}
+                onChange={(tags) => updateTags({ taskId: task.id, tags })}
+              />
             </Prop>
 
             <Prop label="Created">{formatDate(task.created_at)}</Prop>
