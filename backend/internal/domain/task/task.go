@@ -17,14 +17,14 @@ type Task struct {
 	Priority    string     `json:"priority"`    // "low", "medium", "high"
 	AgencyID    uuid.UUID  `json:"agency_id"`
 	CreatedBy   uuid.UUID  `json:"created_by"`
-	AssigneeID  *uuid.UUID `json:"assignee_id"` // nil = unassigned
+	AssignedTo  *uuid.UUID `json:"assigned_to"` // nil = unassigned
 	CreatedAt   time.Time  `json:"created_at"`
 	DueDate     *time.Time `json:"due_date"`     // nil = no due date
 	CompletedAt *time.Time `json:"completed_at"` // nil = not complete
 }
 
 func (t Task) IsAssigned() bool {
-	return t.AssigneeID != nil
+	return t.AssignedTo != nil
 }
 
 func (t Task) IsComplete() bool {
@@ -49,11 +49,11 @@ func (t Task) IsAccessibleBy(userAgencyID uuid.UUID) bool {
 }
 
 func (t *Task) Assign(userID uuid.UUID) {
-	t.AssigneeID = &userID
+	t.AssignedTo = &userID
 }
 
 func (t *Task) Unassign() {
-	t.AssigneeID = nil
+	t.AssignedTo = nil
 }
 
 func (t *Task) SetDueDate(dueDate *time.Time) {
@@ -95,7 +95,7 @@ func FilterByStatus(tasks []Task, status string) []Task {
 func FilterByAssignee(tasks []Task, assigneeID uuid.UUID) []Task {
 	var result []Task
 	for _, t := range tasks {
-		if t.AssigneeID != nil && *t.AssigneeID == assigneeID {
+		if t.AssignedTo != nil && *t.AssignedTo == assigneeID {
 			result = append(result, t)
 		}
 	}

@@ -72,14 +72,14 @@ func TestCreateTask(t *testing.T) {
 			if tt.description != nil && *task.Description != *tt.description {
 				t.Errorf("Description = %v, want %v", task.Description, tt.description)
 			}
-			if tt.asigneeId == nil && task.AssigneeID != nil {
-				t.Errorf("AssigneeID = %v, want nil", *task.AssigneeID)
+			if tt.asigneeId == nil && task.AssignedTo != nil {
+				t.Errorf("AssigneeID = %v, want nil", *task.AssignedTo)
 			}
-			if tt.asigneeId != nil && task.AssigneeID == nil {
-				t.Errorf("AssigneeID = %v, want %v", task.AssigneeID, tt.asigneeId)
+			if tt.asigneeId != nil && task.AssignedTo == nil {
+				t.Errorf("AssigneeID = %v, want %v", task.AssignedTo, tt.asigneeId)
 			}
-			if tt.asigneeId != nil && *task.AssigneeID != *tt.asigneeId {
-				t.Errorf("AssigneeID = %v, want %v", task.AssigneeID, tt.asigneeId)
+			if tt.asigneeId != nil && *task.AssignedTo != *tt.asigneeId {
+				t.Errorf("AssigneeID = %v, want %v", task.AssignedTo, tt.asigneeId)
 			}
 			if tt.dueDate == nil && task.DueDate != nil {
 				t.Errorf("DueDate = %v, want nil", task.DueDate)
@@ -207,8 +207,8 @@ func TestUnassignTask(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error fetching task: %v", err)
 			}
-			if task.AssigneeID != nil {
-				t.Errorf("UnassignTask() AssigneeID = %v, want nil", task.AssigneeID)
+			if task.AssignedTo != nil {
+				t.Errorf("UnassignTask() AssigneeID = %v, want nil", task.AssignedTo)
 			}
 		})
 	}

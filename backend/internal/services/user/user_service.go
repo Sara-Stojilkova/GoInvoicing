@@ -21,7 +21,7 @@ func NewUserService(repo repositories.UserRepository) *UserService {
 func (s *UserService) Create(ctx context.Context, name, email, role string, agencyID uuid.UUID) (*domain.User, error) {
 	user := &domain.User{
 		ID:        uuid.New(),
-		Name:      name,
+		FullName:  name,
 		Email:     email,
 		Role:      role,
 		AgencyID:  agencyID,
