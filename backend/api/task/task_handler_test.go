@@ -30,7 +30,7 @@ func withChiParam(r *http.Request, key, val string) *http.Request {
 
 func mustCreateTask(t *testing.T, svc *services.TaskService, agencyID uuid.UUID) *domain.Task {
 	t.Helper()
-	task, err := svc.Create(context.Background(), "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil)
+	task, err := svc.Create(context.Background(), "Fix bug", "high", agencyID, uuid.New(), nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("setup Create: %v", err)
 	}
@@ -646,6 +646,78 @@ func TestTaskHandlerSetInProgress(t *testing.T) {
 
 			if w.Code != tt.wantStatus {
 				t.Fatalf("status = %d, want %d (body: %s)", w.Code, tt.wantStatus, w.Body.String())
+			}
+		})
+	}
+}
+
+// --- UpdateTags ---
+
+func TestTaskHandlerUpdateTags(t *testing.T) {
+	agencyID := uuid.New()
+
+	tests := []struct {
+		name       string
+		taskID     func(svc *services.TaskService) string
+		body       string
+		wantStatus int
+	}{
+		{
+			name: "sets tags successfully",
+			taskID: func(svc *services.TaskService) string {
+				return mustCreateTask(t, svc, agencyID).ID.String()
+			},
+			body:       `{"tags":["bug","urgent"]}`,
+			wantStatus: http.StatusNoContent,
+		},
+		{
+			name: "clears tags with empty array",
+			taskID: func(svc *services.TaskService) string {
+				return mustCreateTask(t, svc, agencyID).ID.String()
+			},
+			body:       `{"tags":[]}`,
+			wantStatus: http.StatusNoContent,
+		},
+		{
+			name: "invalid task id",
+			taskID: func(_ *services.TaskService) string {
+				return "not-a-uuid"
+			},
+			body:       `{"tags":["bug"]}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "task not found",
+			taskID: func(_ *services.TaskService) string {
+				return uuid.New().String()
+			},
+			body:       `{"tags":["bug"]}`,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name: "invalid json body",
+			taskID: func(svc *services.TaskService) string {
+				return mustCreateTask(t, svc, agencyID).ID.String()
+			},
+			body:       `not-json`,
+			wantStatus: http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := newTaskService()
+			h := NewTaskHandler(svc)
+			taskID := tt.taskID(svc)
+
+			req := httptest.NewRequest(http.MethodPatch, "/api/tasks/"+taskID+"/tags",
+				strings.NewReader(tt.body))
+			req = withChiParam(req, "id", taskID)
+			w := httptest.NewRecorder()
+			h.UpdateTags(w, req)
+
+			if w.Code != tt.wantStatus {
+				t.Errorf("status = %d, want %d (body: %s)", w.Code, tt.wantStatus, w.Body.String())
 			}
 		})
 	}
