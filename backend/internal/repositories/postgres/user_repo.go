@@ -27,6 +27,7 @@ func (r *userRepo) Create(ctx context.Context, user *domain.User) error {
 		user.ID,
 		user.AgencyID,
 		user.FullName,
+		user.Email,
 	)
 	if err != nil {
 		return fmt.Errorf("create user: %w", mapErr(err))
