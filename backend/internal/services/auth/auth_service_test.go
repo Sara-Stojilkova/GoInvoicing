@@ -3,13 +3,17 @@ package services_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"backend/internal/apperrors"
+	agencyDomain "backend/internal/domain/agency"
 	"backend/internal/repositories/memory"
 	services "backend/internal/services/auth"
+
+	"github.com/google/uuid"
 )
 
 func newSvc(t *testing.T, supabaseURL string) *services.AuthService {
@@ -104,5 +108,104 @@ func TestLogin_ServerError(t *testing.T) {
 	}
 	if errors.Is(err, apperrors.ErrInvalidCredentials) {
 		t.Error("server error should not map to ErrInvalidCredentials")
+	}
+}
+
+func makeSupabaseServer(t *testing.T, userID string) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/auth/v1/signup":
+			fmt.Fprintf(w, `{"id":%q,"email":"test@example.com"}`, userID)
+		case r.Method == http.MethodPut && r.URL.Path == "/auth/v1/admin/users/"+userID:
+			fmt.Fprintf(w, `{"id":%q}`, userID)
+		case r.Method == http.MethodDelete && r.URL.Path == "/auth/v1/admin/users/"+userID:
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			t.Errorf("unexpected: %s %s", r.Method, r.URL.Path)
+			http.NotFound(w, r)
+		}
+	}))
+}
+
+func TestRegister_NewAgency(t *testing.T) {
+	userID := "11111111-1111-1111-1111-111111111111"
+	server := makeSupabaseServer(t, userID)
+	defer server.Close()
+
+	agencyRepo := memory.NewAgencyRepo()
+	userRepo := memory.NewUserRepo()
+	svc := services.NewAuthService(server.URL, "anon-key", "svc-key", agencyRepo, userRepo)
+
+	result, err := svc.Register(context.Background(), services.RegisterRequest{
+		FullName:   "Jane Doe",
+		Email:      "jane@example.com",
+		Password:   "password123",
+		AgencyName: "Acme Co",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Role != "admin" {
+		t.Errorf("role: got %q, want %q", result.Role, "admin")
+	}
+	if !result.Activated {
+		t.Error("want activated=true for first user of a new agency")
+	}
+	if result.UserID.String() != userID {
+		t.Errorf("userID: got %v, want %v", result.UserID, userID)
+	}
+	if result.AgencyID == (uuid.UUID{}) {
+		t.Error("want non-zero AgencyID")
+	}
+}
+
+func TestRegister_ExistingAgency(t *testing.T) {
+	userID := "22222222-2222-2222-2222-222222222222"
+	server := makeSupabaseServer(t, userID)
+	defer server.Close()
+
+	agencyRepo := memory.NewAgencyRepo()
+	userRepo := memory.NewUserRepo()
+
+	agencyID := uuid.MustParse("33333333-3333-3333-3333-333333333333")
+	agencyRepo.Create(context.Background(), &agencyDomain.Agency{ID: agencyID, Name: "Existing Co"})
+
+	svc := services.NewAuthService(server.URL, "anon-key", "svc-key", agencyRepo, userRepo)
+	result, err := svc.Register(context.Background(), services.RegisterRequest{
+		FullName: "Bob Smith",
+		Email:    "bob@example.com",
+		Password: "password123",
+		AgencyID: &agencyID,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Role != "member" {
+		t.Errorf("role: got %q, want %q", result.Role, "member")
+	}
+	if result.Activated {
+		t.Error("want activated=false for member joining existing agency")
+	}
+	if result.AgencyID != agencyID {
+		t.Errorf("agencyID: got %v, want %v", result.AgencyID, agencyID)
+	}
+}
+
+func TestRegister_AgencyNotFound(t *testing.T) {
+	agencyRepo := memory.NewAgencyRepo()
+	userRepo := memory.NewUserRepo()
+	svc := services.NewAuthService("http://unused", "anon-key", "svc-key", agencyRepo, userRepo)
+
+	nonExistent := uuid.MustParse("44444444-4444-4444-4444-444444444444")
+	_, err := svc.Register(context.Background(), services.RegisterRequest{
+		FullName: "Bob Smith",
+		Email:    "bob@example.com",
+		Password: "password123",
+		AgencyID: &nonExistent,
+	})
+	if !errors.Is(err, apperrors.ErrNotFound) {
+		t.Errorf("got %v, want ErrNotFound", err)
 	}
 }
