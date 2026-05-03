@@ -119,7 +119,7 @@ func main() {
 
 	// Protected routes — JWT required
 	r.Group(func(r chi.Router) {
-		r.Use(authMiddleware.Authenticate(jwtSecret))
+		r.Use(authMiddleware.Authenticate(jwtSecret, supabaseURL))
 
 		r.Route("/api/invoices", func(r chi.Router) {
 			r.Get("/", invoiceHandler.List)

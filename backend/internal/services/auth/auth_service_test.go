@@ -118,7 +118,7 @@ func makeSupabaseServer(t *testing.T, userID string) *httptest.Server {
 		switch {
 		case r.Method == http.MethodPost && r.URL.Path == "/auth/v1/signup":
 			fmt.Fprintf(w, `{"id":%q,"email":"test@example.com"}`, userID)
-		case r.Method == http.MethodPatch && r.URL.Path == "/auth/v1/admin/users/"+userID:
+		case r.Method == http.MethodPut && r.URL.Path == "/auth/v1/admin/users/"+userID:
 			fmt.Fprintf(w, `{"id":%q}`, userID)
 		case r.Method == http.MethodDelete && r.URL.Path == "/auth/v1/admin/users/"+userID:
 			w.WriteHeader(http.StatusNoContent)
@@ -258,7 +258,7 @@ func TestRegister_CleanupOnSetAppMetadataFailure(t *testing.T) {
 		switch {
 		case r.Method == http.MethodPost && r.URL.Path == "/auth/v1/signup":
 			fmt.Fprintf(w, `{"id":%q,"email":"test@example.com"}`, userID)
-		case r.Method == http.MethodPatch && r.URL.Path == "/auth/v1/admin/users/"+userID:
+		case r.Method == http.MethodPut && r.URL.Path == "/auth/v1/admin/users/"+userID:
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(`{"error":"internal"}`))
 		case r.Method == http.MethodDelete && r.URL.Path == "/auth/v1/admin/users/"+userID:

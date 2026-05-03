@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -102,9 +103,21 @@ type RegisterResult struct {
 	Activated bool      `json:"activated"`
 }
 
-// supabaseUserResponse is the relevant subset of Supabase's signup/admin response.
+// supabaseUserResponse handles both Supabase signup response shapes:
+// - email confirmation ON:  {"id": "...", ...}          (user object at top level)
+// - email confirmation OFF: {"user": {"id": "..."}, ...} (wrapped with tokens)
 type supabaseUserResponse struct {
-	ID string `json:"id"`
+	ID   string `json:"id"`
+	User struct {
+		ID string `json:"id"`
+	} `json:"user"`
+}
+
+func (r *supabaseUserResponse) userID() string {
+	if r.ID != "" {
+		return r.ID
+	}
+	return r.User.ID
 }
 
 // Register creates a Supabase Auth account and wires it to a public.users row.
@@ -144,16 +157,16 @@ func (s *AuthService) Register(ctx context.Context, req RegisterRequest) (*Regis
 		return nil, fmt.Errorf("register: signup: %w", err)
 	}
 
-	userID, err := uuid.Parse(signupResp.ID)
+	userID, err := uuid.Parse(signupResp.userID())
 	if err != nil {
-		return nil, fmt.Errorf("register: parse user id %q: %w", signupResp.ID, err)
+		return nil, fmt.Errorf("register: parse user id %q: %w", signupResp.userID(), err)
 	}
 
 	// Set app_metadata so that jwt_agency_id() and auth_user_is_admin() work.
-	if err := s.supabaseSetAppMetadata(ctx, signupResp.ID, agencyID, role); err != nil {
-		log.Printf("register cleanup: set_app_metadata failed for user %s: %v", signupResp.ID, err)
-		if delErr := s.supabaseDeleteUser(ctx, signupResp.ID); delErr != nil {
-			log.Printf("register cleanup: delete auth user %s: %v", signupResp.ID, delErr)
+	if err := s.supabaseSetAppMetadata(ctx, signupResp.userID(), agencyID, role); err != nil {
+		log.Printf("register cleanup: set_app_metadata failed for user %s: %v", signupResp.userID(), err)
+		if delErr := s.supabaseDeleteUser(ctx, signupResp.userID()); delErr != nil {
+			log.Printf("register cleanup: delete auth user %s: %v", signupResp.userID(), delErr)
 		}
 		if newAgency {
 			if delErr := s.agencyRepo.Delete(ctx, agencyID); delErr != nil {
@@ -166,8 +179,8 @@ func (s *AuthService) Register(ctx context.Context, req RegisterRequest) (*Regis
 	// Update public.users with email and, for new-agency admins, activated=true.
 	if err := s.userRepo.UpdateSignupFields(ctx, userID, req.Email, newAgency); err != nil {
 		log.Printf("register cleanup: UpdateSignupFields failed for user %s: %v", userID, err)
-		if delErr := s.supabaseDeleteUser(ctx, signupResp.ID); delErr != nil {
-			log.Printf("register cleanup: delete auth user %s: %v", signupResp.ID, delErr)
+		if delErr := s.supabaseDeleteUser(ctx, signupResp.userID()); delErr != nil {
+			log.Printf("register cleanup: delete auth user %s: %v", signupResp.userID(), delErr)
 		}
 		if newAgency {
 			if delErr := s.agencyRepo.Delete(ctx, agencyID); delErr != nil {
@@ -216,6 +229,8 @@ func (s *AuthService) supabaseSignup(ctx context.Context, email, password, fullN
 		return nil, apperrors.ErrConflict
 	}
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("supabase signup error %d: %s", resp.StatusCode, body)
 		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
 	}
 
@@ -239,13 +254,13 @@ func (s *AuthService) supabaseSetAppMetadata(ctx context.Context, userID string,
 	if err != nil {
 		return fmt.Errorf("marshal app_metadata request: %w", err)
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("set app_metadata: build request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	// Admin endpoints authenticate via Authorization Bearer, not the apikey header.
 	req.Header.Set("Authorization", "Bearer "+s.serviceRoleKey)
+	req.Header.Set("apikey", s.serviceRoleKey)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -253,6 +268,8 @@ func (s *AuthService) supabaseSetAppMetadata(ctx context.Context, userID string,
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("supabase set_app_metadata error %d: %s", resp.StatusCode, body)
 		return fmt.Errorf("unexpected status %d", resp.StatusCode)
 	}
 	return nil
@@ -266,6 +283,7 @@ func (s *AuthService) supabaseDeleteUser(ctx context.Context, userID string) err
 		return fmt.Errorf("delete auth user: build request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+s.serviceRoleKey)
+	req.Header.Set("apikey", s.serviceRoleKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("delete auth user: %w", err)

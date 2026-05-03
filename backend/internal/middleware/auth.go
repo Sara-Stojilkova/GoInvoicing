@@ -2,6 +2,12 @@ package middleware
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"encoding/base64"
+	"encoding/json"
+	"log"
+	"math/big"
 	"net/http"
 	"strings"
 
@@ -19,7 +25,65 @@ const (
 	ContextRole     ContextKey = "role"
 )
 
-func Authenticate(jwtSecret string) func(http.Handler) http.Handler {
+type jwk struct {
+	Kty string `json:"kty"`
+	Kid string `json:"kid"`
+	Crv string `json:"crv"`
+	X   string `json:"x"`
+	Y   string `json:"y"`
+}
+
+type jwks struct {
+	Keys []jwk `json:"keys"`
+}
+
+// fetchECKeys fetches the JWKS from the Supabase auth endpoint and returns
+// a map of key ID → EC public key for ES256 token verification.
+func fetchECKeys(supabaseURL string) map[string]*ecdsa.PublicKey {
+	keys := map[string]*ecdsa.PublicKey{}
+	if supabaseURL == "" {
+		return keys
+	}
+	resp, err := http.Get(supabaseURL + "/auth/v1/.well-known/jwks.json")
+	if err != nil {
+		log.Printf("middleware: fetch JWKS: %v", err)
+		return keys
+	}
+	defer resp.Body.Close()
+
+	var j jwks
+	if err := json.NewDecoder(resp.Body).Decode(&j); err != nil {
+		log.Printf("middleware: decode JWKS: %v", err)
+		return keys
+	}
+
+	for _, k := range j.Keys {
+		if k.Kty != "EC" || k.Crv != "P-256" {
+			continue
+		}
+		xBytes, err := base64.RawURLEncoding.DecodeString(k.X)
+		if err != nil {
+			continue
+		}
+		yBytes, err := base64.RawURLEncoding.DecodeString(k.Y)
+		if err != nil {
+			continue
+		}
+		keys[k.Kid] = &ecdsa.PublicKey{
+			Curve: elliptic.P256(),
+			X:     new(big.Int).SetBytes(xBytes),
+			Y:     new(big.Int).SetBytes(yBytes),
+		}
+	}
+	log.Printf("middleware: loaded %d EC key(s) from Supabase JWKS", len(keys))
+	return keys
+}
+
+// Authenticate validates JWTs and injects userID, agencyID, and role into the
+// request context. Supports both HS256 (legacy secret) and ES256 (Supabase JWKS).
+func Authenticate(jwtSecret, supabaseURL string) func(http.Handler) http.Handler {
+	ecKeys := fetchECKeys(supabaseURL)
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -30,10 +94,19 @@ func Authenticate(jwtSecret string) func(http.Handler) http.Handler {
 			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
 			token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				switch t.Method.(type) {
+				case *jwt.SigningMethodHMAC:
+					return []byte(jwtSecret), nil
+				case *jwt.SigningMethodECDSA:
+					kid, _ := t.Header["kid"].(string)
+					key, ok := ecKeys[kid]
+					if !ok {
+						return nil, jwt.ErrSignatureInvalid
+					}
+					return key, nil
+				default:
 					return nil, jwt.ErrSignatureInvalid
 				}
-				return []byte(jwtSecret), nil
 			})
 			if err != nil || !token.Valid {
 				api.WriteError(w, http.StatusUnauthorized, "invalid or expired token")

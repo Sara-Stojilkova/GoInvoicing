@@ -122,7 +122,7 @@ func TestAuthenticate_StatusCodes(t *testing.T) {
 		},
 	}
 
-	handler := middleware.Authenticate(testSecret)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := middleware.Authenticate(testSecret, "")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -150,7 +150,7 @@ func TestAuthenticate_InjectsContext(t *testing.T) {
 	var gotAgencyID uuid.UUID
 	var gotRole     string
 
-	handler := middleware.Authenticate(testSecret)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := middleware.Authenticate(testSecret, "")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotUserID   = r.Context().Value(middleware.ContextUserID).(uuid.UUID)
 		gotAgencyID = r.Context().Value(middleware.ContextAgencyID).(uuid.UUID)
 		gotRole     = r.Context().Value(middleware.ContextRole).(string)

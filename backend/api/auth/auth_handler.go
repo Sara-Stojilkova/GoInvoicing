@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"backend/api"
@@ -64,6 +65,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 			api.WriteError(w, http.StatusConflict, "email already registered")
 			return
 		}
+		log.Printf("register error: %v", err)
 		api.WriteError(w, http.StatusInternalServerError, "registration failed")
 		return
 	}
