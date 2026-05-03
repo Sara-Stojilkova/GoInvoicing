@@ -209,3 +209,91 @@ func TestRegister_AgencyNotFound(t *testing.T) {
 		t.Errorf("got %v, want ErrNotFound", err)
 	}
 }
+
+func TestRegister_DuplicateEmail(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && r.URL.Path == "/auth/v1/signup" {
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			w.Write([]byte(`{"error":"user_already_exists"}`))
+			return
+		}
+		if r.Method == http.MethodDelete {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	agencyRepo := memory.NewAgencyRepo()
+	userRepo := memory.NewUserRepo()
+	svc := services.NewAuthService(server.URL, "anon-key", "svc-key", agencyRepo, userRepo)
+
+	_, err := svc.Register(context.Background(), services.RegisterRequest{
+		FullName:   "Jane Doe",
+		Email:      "jane@example.com",
+		Password:   "password123",
+		AgencyName: "Acme Co",
+	})
+	if !errors.Is(err, apperrors.ErrConflict) {
+		t.Errorf("got %v, want ErrConflict", err)
+	}
+
+	// Verify the newly-created agency was cleaned up
+	agencies, listErr := agencyRepo.List(context.Background())
+	if listErr != nil {
+		t.Fatalf("list agencies: %v", listErr)
+	}
+	if len(agencies) != 0 {
+		t.Errorf("agency cleanup: got %d agencies remaining, want 0", len(agencies))
+	}
+}
+
+func TestRegister_CleanupOnSetAppMetadataFailure(t *testing.T) {
+	userID := "55555555-5555-5555-5555-555555555555"
+	deleteCalled := false
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/auth/v1/signup":
+			fmt.Fprintf(w, `{"id":%q,"email":"test@example.com"}`, userID)
+		case r.Method == http.MethodPut && r.URL.Path == "/auth/v1/admin/users/"+userID:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"error":"internal"}`))
+		case r.Method == http.MethodDelete && r.URL.Path == "/auth/v1/admin/users/"+userID:
+			deleteCalled = true
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			t.Errorf("unexpected: %s %s", r.Method, r.URL.Path)
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	agencyRepo := memory.NewAgencyRepo()
+	userRepo := memory.NewUserRepo()
+	svc := services.NewAuthService(server.URL, "anon-key", "svc-key", agencyRepo, userRepo)
+
+	_, err := svc.Register(context.Background(), services.RegisterRequest{
+		FullName:   "Jane Doe",
+		Email:      "jane@example.com",
+		Password:   "password123",
+		AgencyName: "Acme Co",
+	})
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	if !deleteCalled {
+		t.Error("expected auth user DELETE to be called for cleanup")
+	}
+
+	agencies, listErr := agencyRepo.List(context.Background())
+	if listErr != nil {
+		t.Fatalf("list agencies: %v", listErr)
+	}
+	if len(agencies) != 0 {
+		t.Errorf("agency cleanup: got %d agencies remaining, want 0", len(agencies))
+	}
+}

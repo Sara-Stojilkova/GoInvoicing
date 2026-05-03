@@ -199,14 +199,14 @@ func (s *AuthService) supabaseSignup(ctx context.Context, email, password, fullN
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("signup: build request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("apikey", s.anonKey)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("signup: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -219,7 +219,7 @@ func (s *AuthService) supabaseSignup(ctx context.Context, email, password, fullN
 
 	var user supabaseUserResponse
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("signup: decode response: %w", err)
 	}
 	return &user, nil
 }
@@ -239,14 +239,15 @@ func (s *AuthService) supabaseSetAppMetadata(ctx context.Context, userID string,
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(body))
 	if err != nil {
-		return err
+		return fmt.Errorf("set app_metadata: build request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	// Admin endpoints authenticate via Authorization Bearer, not the apikey header.
 	req.Header.Set("Authorization", "Bearer "+s.serviceRoleKey)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("set app_metadata: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
@@ -260,13 +261,16 @@ func (s *AuthService) supabaseDeleteUser(ctx context.Context, userID string) err
 	url := s.supabaseURL + "/auth/v1/admin/users/" + userID
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("delete auth user: build request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+s.serviceRoleKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("delete auth user: %w", err)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("delete auth user: unexpected status %d", resp.StatusCode)
+	}
 	return nil
 }
