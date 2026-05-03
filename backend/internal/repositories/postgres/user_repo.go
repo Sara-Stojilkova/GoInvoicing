@@ -85,3 +85,17 @@ func (r *userRepo) Update(ctx context.Context, user *domain.User) error {
 	}
 	return nil
 }
+
+func (r *userRepo) UpdateSignupFields(ctx context.Context, id uuid.UUID, email string, activated bool) error {
+	tag, err := r.db.Exec(ctx,
+		`UPDATE users SET email = $1, activated = $2 WHERE id = $3`,
+		email, activated, id,
+	)
+	if err != nil {
+		return fmt.Errorf("update signup fields for user %s: %w", id, mapErr(err))
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("user %s: %w", id, apperrors.ErrNotFound)
+	}
+	return nil
+}

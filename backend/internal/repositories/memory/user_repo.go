@@ -57,3 +57,17 @@ func (r *userRepo) Update(ctx context.Context, user *domain.User) error {
 	r.users[user.ID] = user
 	return nil
 }
+
+func (r *userRepo) UpdateSignupFields(ctx context.Context, id uuid.UUID, email string, activated bool) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	u, ok := r.users[id]
+	if !ok {
+		// In production the DB trigger creates this row before this is called.
+		// In unit tests the trigger doesn't fire, so we create a minimal record.
+		r.users[id] = &domain.User{ID: id, Email: email}
+		return nil
+	}
+	u.Email = email
+	return nil
+}
