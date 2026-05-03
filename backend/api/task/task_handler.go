@@ -45,8 +45,9 @@ type createTaskRequest struct {
 	Title       string     `json:"title"`
 	Priority    string     `json:"priority"`
 	AgencyID    uuid.UUID  `json:"agency_id"`
+	CreatedBy   uuid.UUID  `json:"created_by"`
 	Description *string    `json:"description,omitempty"`
-	AssigneeID  *uuid.UUID `json:"assignee_id,omitempty"`
+	AssignedTo  *uuid.UUID `json:"assigned_to,omitempty"`
 	DueDate     *time.Time `json:"due_date,omitempty"`
 }
 
@@ -65,7 +66,11 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		api.WriteError(w, http.StatusBadRequest, "agency_id is required")
 		return
 	}
-	task, err := h.svc.Create(r.Context(), req.Title, req.Priority, req.AgencyID, req.Description, req.AssigneeID, req.DueDate)
+	if req.CreatedBy == uuid.Nil {
+		api.WriteError(w, http.StatusBadRequest, "created_by is required")
+		return
+	}
+	task, err := h.svc.Create(r.Context(), req.Title, req.Priority, req.AgencyID, req.CreatedBy, req.Description, req.AssignedTo, req.DueDate)
 	if err != nil {
 		api.WriteError(w, http.StatusInternalServerError, "failed to create task")
 		return
