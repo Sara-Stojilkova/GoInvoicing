@@ -50,8 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(KEYS.token, res.access_token);
     localStorage.setItem(KEYS.agencyId, agencyId);
     localStorage.setItem(KEYS.role, role);
-    localStorage.setItem(KEYS.email, email);
-    setState({ token: res.access_token, agencyId, role, userEmail: email });
+    localStorage.setItem(KEYS.email, res.user.email);
+    setState({ token: res.access_token, agencyId, role, userEmail: res.user.email });
   }, []);
 
   const register = useCallback(async (req: RegisterRequest) => {

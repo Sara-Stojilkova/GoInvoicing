@@ -96,6 +96,23 @@ describe("AuthContext", () => {
     expect(localStorage.getItem("auth_agency_id")).toBeNull();
   });
 
+  it("login stores email from the API response, not the caller argument", async () => {
+    const body = {
+      ...loginBody,
+      user: { ...loginBody.user, email: "normalised@example.com" },
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeFetchResponse(200, body)));
+
+    render(<AuthProvider><TestConsumer /></AuthProvider>);
+
+    await act(async () => {
+      screen.getByRole("button", { name: "login" }).click();
+    });
+
+    expect(screen.getByTestId("email").textContent).toBe("normalised@example.com");
+    expect(localStorage.getItem("auth_email")).toBe("normalised@example.com");
+  });
+
   it("auth:logout event triggers logout", async () => {
     localStorage.setItem("auth_token", "tok");
     localStorage.setItem("auth_agency_id", "ag");
