@@ -30,7 +30,7 @@ func fakeSupabase(t *testing.T, userID string) *httptest.Server {
 		switch {
 		case r.Method == http.MethodPost && r.URL.Path == "/auth/v1/signup":
 			fmt.Fprintf(w, `{"id":%q}`, userID)
-		case r.Method == http.MethodPut && r.URL.Path == "/auth/v1/admin/users/"+userID:
+		case r.Method == http.MethodPatch && r.URL.Path == "/auth/v1/admin/users/"+userID:
 			fmt.Fprintf(w, `{"id":%q}`, userID)
 		case r.Method == http.MethodPost && r.URL.Path == "/auth/v1/token":
 			w.Write([]byte(`{"access_token":"tok","refresh_token":"ref","expires_in":3600,"token_type":"bearer"}`))

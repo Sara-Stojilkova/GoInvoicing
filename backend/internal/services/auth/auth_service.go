@@ -38,11 +38,13 @@ func NewAuthService(supabaseURL, anonKey, serviceRoleKey string, agencyRepo repo
 }
 
 // LoginResult holds the token data returned by Supabase on successful login.
+// The User field passes through the Supabase user object as-is for the frontend.
 type LoginResult struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	TokenType    string `json:"token_type"`
+	AccessToken  string          `json:"access_token"`
+	RefreshToken string          `json:"refresh_token"`
+	ExpiresIn    int             `json:"expires_in"`
+	TokenType    string          `json:"token_type"`
+	User         json.RawMessage `json:"user,omitempty"`
 }
 
 // Login authenticates a user via Supabase Auth and returns a token pair.
@@ -237,7 +239,7 @@ func (s *AuthService) supabaseSetAppMetadata(ctx context.Context, userID string,
 	if err != nil {
 		return fmt.Errorf("marshal app_metadata request: %w", err)
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("set app_metadata: build request: %w", err)
 	}
