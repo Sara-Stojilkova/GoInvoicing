@@ -20,6 +20,9 @@ type AuthService struct {
 	userRepo       repositories.UserRepository
 }
 
+// NewAuthService creates an AuthService that proxies auth operations to Supabase.
+// supabaseURL is the base URL (no trailing slash). anonKey is used for user-facing
+// calls; serviceRoleKey is used for admin calls that require elevated privileges.
 func NewAuthService(supabaseURL, anonKey, serviceRoleKey string, agencyRepo repositories.AgencyRepository, userRepo repositories.UserRepository) *AuthService {
 	return &AuthService{
 		supabaseURL:    supabaseURL,
@@ -41,10 +44,13 @@ type LoginResult struct {
 // Login authenticates a user via Supabase Auth and returns a token pair.
 func (s *AuthService) Login(ctx context.Context, email, password string) (*LoginResult, error) {
 	url := s.supabaseURL + "/auth/v1/token?grant_type=password"
-	body, _ := json.Marshal(map[string]string{
+	body, err := json.Marshal(map[string]string{
 		"email":    email,
 		"password": password,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("login: marshal request: %w", err)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("login: build request: %w", err)

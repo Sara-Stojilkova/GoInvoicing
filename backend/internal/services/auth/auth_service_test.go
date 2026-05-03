@@ -39,6 +39,12 @@ func TestLogin_Success(t *testing.T) {
 	if result.RefreshToken != "ref456" {
 		t.Errorf("refresh_token: got %q, want %q", result.RefreshToken, "ref456")
 	}
+	if result.ExpiresIn != 3600 {
+		t.Errorf("expires_in: got %d, want 3600", result.ExpiresIn)
+	}
+	if result.TokenType != "bearer" {
+		t.Errorf("token_type: got %q, want %q", result.TokenType, "bearer")
+	}
 }
 
 func TestLogin_InvalidCredentials(t *testing.T) {
@@ -64,5 +70,39 @@ func TestLogin_UnauthorizedResponse(t *testing.T) {
 	_, err := newSvc(t, server.URL).Login(context.Background(), "user@example.com", "wrong")
 	if !errors.Is(err, apperrors.ErrInvalidCredentials) {
 		t.Errorf("got %v, want ErrInvalidCredentials", err)
+	}
+}
+
+func TestLogin_ContextCancelled(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// server never responds; context is cancelled before the call reaches it
+	}))
+	defer server.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // cancel immediately before the call
+
+	_, err := newSvc(t, server.URL).Login(ctx, "user@example.com", "pass")
+	if err == nil {
+		t.Fatal("expected an error for cancelled context")
+	}
+	if errors.Is(err, apperrors.ErrInvalidCredentials) {
+		t.Error("context cancellation should not map to ErrInvalidCredentials")
+	}
+}
+
+func TestLogin_ServerError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error":"internal_server_error"}`))
+	}))
+	defer server.Close()
+
+	_, err := newSvc(t, server.URL).Login(context.Background(), "user@example.com", "pass")
+	if err == nil {
+		t.Fatal("expected an error for server error response")
+	}
+	if errors.Is(err, apperrors.ErrInvalidCredentials) {
+		t.Error("server error should not map to ErrInvalidCredentials")
 	}
 }
