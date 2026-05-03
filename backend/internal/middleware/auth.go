@@ -69,6 +69,10 @@ func Authenticate(jwtSecret string) func(http.Handler) http.Handler {
 				return
 			}
 			role, _ := appMeta["role"].(string)
+			if role == "" {
+				api.WriteError(w, http.StatusUnauthorized, "missing role in token")
+				return
+			}
 
 			ctx := context.WithValue(r.Context(), ContextUserID, userID)
 			ctx = context.WithValue(ctx, ContextAgencyID, agencyID)
