@@ -23,7 +23,7 @@ func NewUserHandler(svc *services.UserService) *UserHandler {
 }
 
 type createUserRequest struct {
-	Name     string    `json:"name"`
+	FullName string    `json:"full_name"`
 	Email    string    `json:"email"`
 	Role     string    `json:"role"`
 	AgencyID uuid.UUID `json:"agency_id"`
@@ -36,7 +36,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		api.WriteError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if req.Name == "" || req.Email == "" || req.Role == "" {
+	if req.FullName == "" || req.Email == "" || req.Role == "" {
 		api.WriteError(w, http.StatusBadRequest, "name, email, and role are required")
 		return
 	}
@@ -44,7 +44,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		api.WriteError(w, http.StatusBadRequest, "agency_id is required")
 		return
 	}
-	user, err := h.svc.Create(r.Context(), req.Name, req.Email, req.Role, req.AgencyID)
+	user, err := h.svc.Create(r.Context(), req.FullName, req.Email, req.Role, req.AgencyID)
 	if err != nil {
 		api.WriteError(w, http.StatusInternalServerError, "failed to create user")
 		return

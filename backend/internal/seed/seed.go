@@ -29,7 +29,7 @@ func Generate() Data {
 	// ---- Users ----
 	sara := domainUser.User{
 		ID:        uuid.New(),
-		Name:      "Sara Stojilkova",
+		FullName:  "Sara Stojilkova",
 		Email:     "sara.stojilkova@bilans.dev",
 		Role:      "admin",
 		AgencyID:  agency1.ID,
@@ -38,7 +38,7 @@ func Generate() Data {
 
 	john := domainUser.User{
 		ID:        uuid.New(),
-		Name:      "John Doe",
+		FullName:  "John Doe",
 		Email:     "john.doe@bilans.dev",
 		Role:      "member",
 		AgencyID:  agency1.ID,
@@ -47,7 +47,7 @@ func Generate() Data {
 
 	jane := domainUser.User{
 		ID:        uuid.New(),
-		Name:      "Jane Doe",
+		FullName:  "Jane Doe",
 		Email:     "jane.doe@bilans.dev",
 		Role:      "member",
 		AgencyID:  agency1.ID,
@@ -65,7 +65,7 @@ func Generate() Data {
 		Status:      "todo",
 		Priority:    "high",
 		AgencyID:    agency1.ID,
-		AssigneeID:  &sara.ID,
+		AssignedTo:  &sara.ID,
 		CreatedAt:   now,
 		DueDate:     &due,
 	}
@@ -76,7 +76,7 @@ func Generate() Data {
 		Status:     "in_progress",
 		Priority:   "medium",
 		AgencyID:   agency1.ID,
-		AssigneeID: &john.ID,
+		AssignedTo: &john.ID,
 		CreatedAt:  now,
 	}
 

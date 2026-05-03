@@ -37,7 +37,7 @@ func (s *TaskService) Create(
 		AgencyID:    agencyID,
 		CreatedBy:   createdBy,
 		Description: description,
-		AssigneeID:  assigneeID,
+		AssignedTo:  assigneeID,
 		DueDate:     dueDate,
 		Status:      "todo",
 		CreatedAt:   time.Now(),
