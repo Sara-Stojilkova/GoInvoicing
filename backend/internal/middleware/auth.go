@@ -11,12 +11,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type contextKey string
+type ContextKey string
 
 const (
-	ContextUserID   contextKey = "user_id"
-	ContextAgencyID contextKey = "agency_id"
-	ContextRole     contextKey = "role"
+	ContextUserID   ContextKey = "user_id"
+	ContextAgencyID ContextKey = "agency_id"
+	ContextRole     ContextKey = "role"
 )
 
 func Authenticate(jwtSecret string) func(http.Handler) http.Handler {
@@ -62,14 +62,18 @@ func Authenticate(jwtSecret string) func(http.Handler) http.Handler {
 				api.WriteError(w, http.StatusUnauthorized, "missing app_metadata in token")
 				return
 			}
-			agencyIDStr, _ := appMeta["agency_id"].(string)
+			agencyIDStr, ok := appMeta["agency_id"].(string)
+			if !ok {
+				api.WriteError(w, http.StatusUnauthorized, "invalid agency_id in token")
+				return
+			}
 			agencyID, err := uuid.Parse(agencyIDStr)
 			if err != nil {
 				api.WriteError(w, http.StatusUnauthorized, "invalid agency_id in token")
 				return
 			}
-			role, _ := appMeta["role"].(string)
-			if role == "" {
+			role, ok := appMeta["role"].(string)
+			if !ok || role == "" {
 				api.WriteError(w, http.StatusUnauthorized, "missing role in token")
 				return
 			}

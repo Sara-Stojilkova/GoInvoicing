@@ -108,6 +108,18 @@ func TestAuthenticate_StatusCodes(t *testing.T) {
 			}),
 			wantStatus: http.StatusUnauthorized,
 		},
+		{
+			name: "non-uuid sub",
+			authHeader: "Bearer " + makeToken(t, testSecret, jwt.MapClaims{
+				"sub": "not-a-uuid",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"app_metadata": map[string]interface{}{
+					"agency_id": agencyID.String(),
+					"role":      "admin",
+				},
+			}),
+			wantStatus: http.StatusUnauthorized,
+		},
 	}
 
 	handler := middleware.Authenticate(testSecret)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
