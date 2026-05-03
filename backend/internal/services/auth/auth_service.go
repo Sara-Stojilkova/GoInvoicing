@@ -94,10 +94,10 @@ type RegisterRequest struct {
 
 // RegisterResult holds the account details created during registration.
 type RegisterResult struct {
-	UserID    uuid.UUID
-	AgencyID  uuid.UUID
-	Role      string
-	Activated bool
+	UserID    uuid.UUID `json:"user_id"`
+	AgencyID  uuid.UUID `json:"agency_id"`
+	Role      string    `json:"role"`
+	Activated bool      `json:"activated"`
 }
 
 // supabaseUserResponse is the relevant subset of Supabase's signup/admin response.
