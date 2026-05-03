@@ -38,7 +38,7 @@ func (s *TaskService) Create(
 		AgencyID:    agencyID,
 		CreatedBy:   createdBy,
 		Description: description,
-		AssigneeID:  assigneeID,
+		AssignedTo:  assigneeID,
 		DueDate:     dueDate,
 		Tags:        tags,
 		Status:      "todo",

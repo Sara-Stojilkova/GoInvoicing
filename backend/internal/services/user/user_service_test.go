@@ -22,15 +22,15 @@ func TestCreateUser(t *testing.T) {
 	agencyID := uuid.New()
 
 	tests := []struct {
-		name       string
-		userName   string
-		email      string
-		role       string
-		agencyID   uuid.UUID
-		wantRole   string
+		name     string
+		userName string
+		email    string
+		role     string
+		agencyID uuid.UUID
+		wantRole string
 	}{
-		{"creates admin user",  "Alice", "alice@example.com", "admin",  agencyID, "admin"},
-		{"creates member user", "Bob",   "bob@example.com",   "member", agencyID, "member"},
+		{"creates admin user", "Alice", "alice@example.com", "admin", agencyID, "admin"},
+		{"creates member user", "Bob", "bob@example.com", "member", agencyID, "member"},
 	}
 
 	for _, tt := range tests {
@@ -40,8 +40,8 @@ func TestCreateUser(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			if user.Name != tt.userName {
-				t.Errorf("Name = %q, want %q", user.Name, tt.userName)
+			if user.FullName != tt.userName {
+				t.Errorf("Name = %q, want %q", user.FullName, tt.userName)
 			}
 			if user.Email != tt.email {
 				t.Errorf("Email = %q, want %q", user.Email, tt.email)
@@ -121,8 +121,8 @@ func TestListUsersByAgency(t *testing.T) {
 		{
 			name: "only returns users from requested agency",
 			setup: func(svc *services.UserService) {
-				svc.Create(ctx, "Alice", "alice@example.com", "admin",  agencyA)
-				svc.Create(ctx, "Bob",   "bob@example.com",   "member", agencyA)
+				svc.Create(ctx, "Alice", "alice@example.com", "admin", agencyA)
+				svc.Create(ctx, "Bob", "bob@example.com", "member", agencyA)
 				svc.Create(ctx, "Carol", "carol@example.com", "member", agencyB)
 			},
 			agencyID:  agencyA,
@@ -131,8 +131,8 @@ func TestListUsersByAgency(t *testing.T) {
 		{
 			name: "filters to correct agency",
 			setup: func(svc *services.UserService) {
-				svc.Create(ctx, "Alice", "alice@example.com", "admin",  agencyA)
-				svc.Create(ctx, "Bob",   "bob@example.com",   "member", agencyB)
+				svc.Create(ctx, "Alice", "alice@example.com", "admin", agencyA)
+				svc.Create(ctx, "Bob", "bob@example.com", "member", agencyB)
 			},
 			agencyID:  agencyB,
 			wantCount: 1,

@@ -22,11 +22,11 @@ func NewUserRepo(db *pgxpool.Pool) repositories.UserRepository {
 
 func (r *userRepo) Create(ctx context.Context, user *domain.User) error {
 	_, err := r.db.Exec(ctx, `
-		insert into users (id, agency_id, full_name)
-		values ($1, $2, $3)`,
+		insert into users (id, agency_id, full_name, email)
+		values ($1, $2, $3, $4)`,
 		user.ID,
 		user.AgencyID,
-		user.Name,
+		user.FullName,
 	)
 	if err != nil {
 		return fmt.Errorf("create user: %w", mapErr(err))
@@ -36,12 +36,12 @@ func (r *userRepo) Create(ctx context.Context, user *domain.User) error {
 
 func (r *userRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	row := r.db.QueryRow(ctx, `
-		select id, agency_id, full_name, created_at
+		select id, agency_id, full_name, email, created_at
 		from users
 		where id = $1 and deleted_at is null`, id)
 
 	var u domain.User
-	if err := row.Scan(&u.ID, &u.AgencyID, &u.Name, &u.CreatedAt); err != nil {
+	if err := row.Scan(&u.ID, &u.AgencyID, &u.FullName, &u.Email, &u.CreatedAt); err != nil {
 		return nil, fmt.Errorf("user %s: %w", id, mapErr(err))
 	}
 	return &u, nil
@@ -49,7 +49,7 @@ func (r *userRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, err
 
 func (r *userRepo) List(ctx context.Context) ([]*domain.User, error) {
 	rows, err := r.db.Query(ctx, `
-		select id, agency_id, full_name, created_at
+		select id, agency_id, full_name, email, created_at
 		from users
 		where deleted_at is null
 		order by created_at desc`)
@@ -61,7 +61,7 @@ func (r *userRepo) List(ctx context.Context) ([]*domain.User, error) {
 	var users []*domain.User
 	for rows.Next() {
 		var u domain.User
-		if err := rows.Scan(&u.ID, &u.AgencyID, &u.Name, &u.CreatedAt); err != nil {
+		if err := rows.Scan(&u.ID, &u.AgencyID, &u.FullName, &u.Email, &u.CreatedAt); err != nil {
 			return nil, fmt.Errorf("list users scan: %w", err)
 		}
 		users = append(users, &u)
@@ -74,7 +74,7 @@ func (r *userRepo) Update(ctx context.Context, user *domain.User) error {
 		update users
 		set full_name = $1
 		where id = $2 and deleted_at is null`,
-		user.Name,
+		user.FullName,
 		user.ID,
 	)
 	if err != nil {

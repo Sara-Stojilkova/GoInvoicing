@@ -111,6 +111,7 @@ export type Database = {
           agency_id: string
           created_at: string
           deleted_at: string | null
+          email: string | null
           full_name: string | null
           id: string
         }
@@ -119,6 +120,7 @@ export type Database = {
           agency_id: string
           created_at?: string
           deleted_at?: string | null
+          email?: string | null
           full_name?: string | null
           id: string
         }
@@ -127,6 +129,7 @@ export type Database = {
           agency_id?: string
           created_at?: string
           deleted_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
         }

@@ -40,20 +40,20 @@ func mustCreateUser(t *testing.T, svc *services.UserService, agencyID uuid.UUID)
 
 func TestUserHandlerCreate(t *testing.T) {
 	agencyID := uuid.New()
-	validBody := fmt.Sprintf(`{"name":"Alice","email":"alice@example.com","role":"member","agency_id":%q}`, agencyID)
+	validBody := fmt.Sprintf(`{"full_name":"Alice","email":"alice@example.com","role":"member","agency_id":%q}`, agencyID)
 
 	tests := []struct {
 		name       string
 		body       string
 		wantStatus int
 	}{
-		{"valid request",          validBody,                                                                              http.StatusCreated},
-		{"malformed json",         `{bad json}`,                                                                           http.StatusBadRequest},
-		{"missing name",           fmt.Sprintf(`{"email":"alice@example.com","role":"member","agency_id":%q}`, agencyID), http.StatusBadRequest},
-		{"missing email",          fmt.Sprintf(`{"name":"Alice","role":"member","agency_id":%q}`, agencyID),              http.StatusBadRequest},
-		{"missing role",           fmt.Sprintf(`{"name":"Alice","email":"alice@example.com","agency_id":%q}`, agencyID),  http.StatusBadRequest},
-		{"missing agency_id",      `{"name":"Alice","email":"alice@example.com","role":"member"}`,                         http.StatusBadRequest},
-		{"invalid agency_id uuid", `{"name":"Alice","email":"alice@example.com","role":"member","agency_id":"bad"}`,       http.StatusBadRequest},
+		{"valid request", validBody, http.StatusCreated},
+		{"malformed json", `{bad json}`, http.StatusBadRequest},
+		{"missing name", fmt.Sprintf(`{"email":"alice@example.com","role":"member","agency_id":%q}`, agencyID), http.StatusBadRequest},
+		{"missing email", fmt.Sprintf(`{"full_name":"Alice","role":"member","agency_id":%q}`, agencyID), http.StatusBadRequest},
+		{"missing role", fmt.Sprintf(`{"full_name":"Alice","email":"alice@example.com","agency_id":%q}`, agencyID), http.StatusBadRequest},
+		{"missing agency_id", `{"full_name":"Alice","email":"alice@example.com","role":"member"}`, http.StatusBadRequest},
+		{"invalid agency_id uuid", `{"full_name":"Alice","email":"alice@example.com","role":"member","agency_id":"bad"}`, http.StatusBadRequest},
 	}
 
 	for _, tt := range tests {

@@ -18,8 +18,8 @@ func TestIsAssigned(t *testing.T) {
 		task Task
 		want bool
 	}{
-		{"unassigned task", Task{ID: uuid.New(), AssigneeID: nil}, false},
-		{"assigned task", Task{ID: uuid.New(), AssigneeID: &userID}, true},
+		{"unassigned task", Task{ID: uuid.New(), AssignedTo: nil}, false},
+		{"assigned task", Task{ID: uuid.New(), AssignedTo: &userID}, true},
 	}
 
 	for _, tt := range tests {
@@ -93,18 +93,18 @@ func TestAssign(t *testing.T) {
 		wantID     uuid.UUID
 	}{
 		{"assign to unassigned task", Task{ID: uuid.New()}, userA, userA},
-		{"reassign to different user", Task{ID: uuid.New(), AssigneeID: &userA}, userB, userB},
+		{"reassign to different user", Task{ID: uuid.New(), AssignedTo: &userA}, userB, userB},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			task := tt.task
 			task.Assign(tt.assigneeID)
-			if task.AssigneeID == nil {
+			if task.AssignedTo == nil {
 				t.Fatal("Assign() did not set AssigneeID")
 			}
-			if *task.AssigneeID != tt.wantID {
-				t.Errorf("Assign() AssigneeID = %v, want %v", *task.AssigneeID, tt.wantID)
+			if *task.AssignedTo != tt.wantID {
+				t.Errorf("Assign() AssigneeID = %v, want %v", *task.AssignedTo, tt.wantID)
 			}
 		})
 	}
@@ -117,16 +117,16 @@ func TestUnassign(t *testing.T) {
 		name string
 		task Task
 	}{
-		{"unassigns an assigned task", Task{ID: uuid.New(), AssigneeID: &userID}},
-		{"unassigning an already unassigned task is a no-op", Task{ID: uuid.New(), AssigneeID: nil}},
+		{"unassigns an assigned task", Task{ID: uuid.New(), AssignedTo: &userID}},
+		{"unassigning an already unassigned task is a no-op", Task{ID: uuid.New(), AssignedTo: nil}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			task := tt.task
 			task.Unassign()
-			if task.AssigneeID != nil {
-				t.Errorf("Unassign() AssigneeID = %v, want nil", task.AssigneeID)
+			if task.AssignedTo != nil {
+				t.Errorf("Unassign() AssigneeID = %v, want nil", task.AssignedTo)
 			}
 		})
 	}
@@ -212,10 +212,10 @@ func TestSetDescription(t *testing.T) {
 	other := "Update the README"
 
 	tests := []struct {
-		name    string
-		task    Task
-		input   *string
-		want    *string
+		name  string
+		task  Task
+		input *string
+		want  *string
 	}{
 		{"sets description on a task with none", Task{ID: uuid.New()}, &desc, &desc},
 		{"overwrites an existing description", Task{ID: uuid.New(), Description: &desc}, &other, &other},
@@ -310,10 +310,10 @@ func TestFilterByAssignee(t *testing.T) {
 	userA := uuid.New()
 	userB := uuid.New()
 	tasks := []Task{
-		{ID: uuid.New(), AssigneeID: &userA},
-		{ID: uuid.New(), AssigneeID: &userB},
-		{ID: uuid.New(), AssigneeID: &userA},
-		{ID: uuid.New(), AssigneeID: nil},
+		{ID: uuid.New(), AssignedTo: &userA},
+		{ID: uuid.New(), AssignedTo: &userB},
+		{ID: uuid.New(), AssignedTo: &userA},
+		{ID: uuid.New(), AssignedTo: nil},
 	}
 
 	tests := []struct {
