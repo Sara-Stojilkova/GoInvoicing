@@ -65,9 +65,10 @@ func (r *userRepo) UpdateSignupFields(ctx context.Context, id uuid.UUID, email s
 	if !ok {
 		// In production the DB trigger creates this row before this is called.
 		// In unit tests the trigger doesn't fire, so we create a minimal record.
-		r.users[id] = &domain.User{ID: id, Email: email}
+		r.users[id] = &domain.User{ID: id, Email: email, Activated: activated}
 		return nil
 	}
 	u.Email = email
+	u.Activated = activated
 	return nil
 }

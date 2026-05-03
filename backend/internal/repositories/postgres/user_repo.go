@@ -36,12 +36,12 @@ func (r *userRepo) Create(ctx context.Context, user *domain.User) error {
 
 func (r *userRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	row := r.db.QueryRow(ctx, `
-		select id, agency_id, full_name, email, created_at
+		select id, agency_id, full_name, email, activated, created_at
 		from users
 		where id = $1 and deleted_at is null`, id)
 
 	var u domain.User
-	if err := row.Scan(&u.ID, &u.AgencyID, &u.FullName, &u.Email, &u.CreatedAt); err != nil {
+	if err := row.Scan(&u.ID, &u.AgencyID, &u.FullName, &u.Email, &u.Activated, &u.CreatedAt); err != nil {
 		return nil, fmt.Errorf("user %s: %w", id, mapErr(err))
 	}
 	return &u, nil
@@ -49,7 +49,7 @@ func (r *userRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, err
 
 func (r *userRepo) List(ctx context.Context) ([]*domain.User, error) {
 	rows, err := r.db.Query(ctx, `
-		select id, agency_id, full_name, email, created_at
+		select id, agency_id, full_name, email, activated, created_at
 		from users
 		where deleted_at is null
 		order by created_at desc`)
@@ -61,7 +61,7 @@ func (r *userRepo) List(ctx context.Context) ([]*domain.User, error) {
 	var users []*domain.User
 	for rows.Next() {
 		var u domain.User
-		if err := rows.Scan(&u.ID, &u.AgencyID, &u.FullName, &u.Email, &u.CreatedAt); err != nil {
+		if err := rows.Scan(&u.ID, &u.AgencyID, &u.FullName, &u.Email, &u.Activated, &u.CreatedAt); err != nil {
 			return nil, fmt.Errorf("list users scan: %w", err)
 		}
 		users = append(users, &u)
@@ -87,8 +87,10 @@ func (r *userRepo) Update(ctx context.Context, user *domain.User) error {
 }
 
 func (r *userRepo) UpdateSignupFields(ctx context.Context, id uuid.UUID, email string, activated bool) error {
-	tag, err := r.db.Exec(ctx,
-		`UPDATE users SET email = $1, activated = $2 WHERE id = $3`,
+	tag, err := r.db.Exec(ctx, `
+		update users
+		set email = $1, activated = $2
+		where id = $3 and deleted_at is null`,
 		email, activated, id,
 	)
 	if err != nil {

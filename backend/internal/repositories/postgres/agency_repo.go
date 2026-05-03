@@ -69,8 +69,10 @@ func (r *agencyRepo) List(ctx context.Context) ([]*domain.Agency, error) {
 }
 
 func (r *agencyRepo) Delete(ctx context.Context, id uuid.UUID) error {
-	tag, err := r.db.Exec(ctx,
-		`UPDATE agencies SET deleted_at = now() WHERE id = $1 AND deleted_at IS NULL`,
+	tag, err := r.db.Exec(ctx, `
+		update agencies
+		set deleted_at = now()
+		where id = $1 and deleted_at is null`,
 		id,
 	)
 	if err != nil {
