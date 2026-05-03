@@ -11,6 +11,7 @@ function makeFetchResponse(status: number, body: unknown): Response {
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  localStorage.clear();
 });
 
 describe("request", () => {
@@ -81,14 +82,11 @@ describe("request", () => {
 
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     expect((init.headers as Record<string, string>)["Authorization"]).toBe("Bearer my-token");
-
-    localStorage.removeItem("auth_token");
   });
 
   it("does not attach Authorization header when no token in localStorage", async () => {
     const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse(200, {}));
     vi.stubGlobal("fetch", fetchMock);
-    localStorage.removeItem("auth_token");
 
     await request("/tasks");
 
