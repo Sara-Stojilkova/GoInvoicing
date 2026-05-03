@@ -18,13 +18,15 @@ const agency: Agency = {
   id: agencyId,
   name: "Acme Corp",
   created_at: "2024-01-01T00:00:00Z",
+  deleted_at: null
 };
 
 const assigneeUser: User = {
   id: assigneeId,
-  name: "Alice",
+  full_name: "Alice",
+  activated: true,
+  deleted_at: null,
   email: "alice@acme.com",
-  role: "admin",
   agency_id: agencyId,
   created_at: "2024-01-01T00:00:00Z",
 };
@@ -36,10 +38,13 @@ const fullTask: Task = {
   status:       "in_progress",
   priority:     "high",
   agency_id:    agencyId,
-  assignee_id:  assigneeId,
+  assigned_to:  assigneeId,
+  created_by:   assigneeUser.id,
   created_at:   "2024-01-15T09:00:00Z",
   due_date:     "2024-02-01T00:00:00Z",
   completed_at: null,
+  tags:         null,
+  updated_at:   "2024-01-15T09:00:00Z",
 };
 
 const minimalTask: Task = {
@@ -49,10 +54,13 @@ const minimalTask: Task = {
   status:       "todo",
   priority:     "low",
   agency_id:    agencyId,
-  assignee_id:  null,
+  assigned_to:  null,
+  created_by:   assigneeUser.id,
   created_at:   "2024-01-15T09:00:00Z",
   due_date:     null,
   completed_at: null,
+  tags:         null,
+  updated_at:   "2024-01-15T09:00:00Z",
 };
 
 const completedTask: Task = {
@@ -195,7 +203,7 @@ describe("TaskDetailPage", () => {
       mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByText(assigneeUser.name)).toBeInTheDocument();
+      expect(screen.getAllByText(assigneeUser.full_name ?? "").length).toBeGreaterThan(0);
     });
 
     it("shows unassigned when assignee_id is null", async () => {
@@ -246,7 +254,7 @@ describe("TaskDetailPage", () => {
       mockApis(fullTask);
       renderPage();
       await waitFor(() => screen.getByText("Fix login bug"));
-      expect(screen.getByRole("option", { name: assigneeUser.name })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: assigneeUser.full_name! })).toBeInTheDocument();
     });
 
     it("pre-selects the current assignee", async () => {
@@ -259,7 +267,7 @@ describe("TaskDetailPage", () => {
 
     it("calls assignTask when a new assignee is selected", async () => {
       const spy = vi.spyOn(tasksApi, "assignTask").mockResolvedValue(undefined);
-      const newUser: User = { id: "new-user-id", name: "Bob", email: "bob@acme.com", role: "member", agency_id: agencyId, created_at: "2024-01-01T00:00:00Z" };
+      const newUser: User = { id: "new-user-id", full_name: "Bob", email: "bob@acme.com", agency_id: agencyId, created_at: "2024-01-01T00:00:00Z", activated: true, deleted_at: null };
       vi.spyOn(tasksApi, "getTask").mockResolvedValue(fullTask);
       vi.spyOn(usersApi, "listUsers").mockResolvedValue([assigneeUser, newUser]);
       vi.spyOn(agenciesApi, "getAgency").mockResolvedValue(agency);

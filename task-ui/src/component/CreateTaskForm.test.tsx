@@ -16,8 +16,8 @@ vi.mock("../hooks/useUsers", () => ({
 }));
 
 const users: User[] = [
-  { id: "user-uuid-1", name: "Alice", email: "alice@acme.com", role: "admin", agency_id: "a1", created_at: "2024-01-01T00:00:00Z" },
-  { id: "user-uuid-2", name: "Bob",   email: "bob@acme.com",   role: "member", agency_id: "a1", created_at: "2024-01-02T00:00:00Z" },
+  { id: "user-uuid-1", full_name: "Alice", email: "alice@acme.com", agency_id: "a1", created_at: "2024-01-01T00:00:00Z", activated: true, deleted_at: null },
+  { id: "user-uuid-2", full_name: "Bob",   email: "bob@acme.com", agency_id: "a1", created_at: "2024-01-02T00:00:00Z", activated: true, deleted_at: null },
 ];
 
 beforeEach(() => {
@@ -81,22 +81,22 @@ describe("CreateTaskForm", () => {
     );
   });
 
-  it("omits assignee_id from payload when unassigned is selected", () => {
+  it("omits assigned_to from payload when unassigned is selected", () => {
     render(<CreateTaskForm agencyId="a1" />);
     fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "New task" } });
     fireEvent.change(screen.getByLabelText(/assignee/i), { target: { value: "" } });
     fireEvent.click(screen.getByRole("button", { name: /create/i }));
     const payload = mutate.mock.calls[0][0];
-    expect(payload.assignee_id).toBeUndefined();
+    expect(payload.assigned_to).toBeUndefined();
   });
 
-  it("includes assignee_id in payload when a user is selected", () => {
+  it("includes assigned_to in payload when a user is selected", () => {
     render(<CreateTaskForm agencyId="a1" />);
     fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "New task" } });
     fireEvent.change(screen.getByLabelText(/assignee/i), { target: { value: "user-uuid-1" } });
     fireEvent.click(screen.getByRole("button", { name: /create/i }));
     expect(mutate).toHaveBeenCalledWith(
-      expect.objectContaining({ assignee_id: "user-uuid-1" }),
+      expect.objectContaining({ assigned_to: "user-uuid-1" }),
       expect.any(Object)
     );
   });
@@ -158,7 +158,7 @@ describe("CreateTaskForm", () => {
         priority: "medium",
         agency_id: "a1",
         description: "test desc",
-        assignee_id: "user-uuid-2",
+        assigned_to: "user-uuid-2",
         due_date: "2026-01-01",
       },
       expect.any(Object)

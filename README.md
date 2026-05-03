@@ -110,6 +110,20 @@ for _, tt := range tests {
 }
 ```
 
+## Database migrations
+
+After writing or applying any migration, regenerate the TypeScript types before committing:
+
+```bash
+cd backend
+supabase db push          # push migration to remote
+
+cd ../task-ui
+npm run gen:types         # regenerates src/database.types.ts from the live schema
+```
+
+`src/database.types.ts` must always reflect the current remote schema. Committing a migration without updating the types will cause type errors in the frontend.
+
 ## Supabase
 
 See [SUPABASE.md](SUPABASE.md) for full details on the hosted project, credentials, and local development workflow.

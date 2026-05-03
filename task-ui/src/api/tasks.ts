@@ -14,7 +14,7 @@ export function createTask(data: {
   priority: string; 
   agency_id: string; 
   description?: string;
-  assignee_id?: string;
+  assigned_to?: string;
   due_date?: string;
 }): Promise<Task> {
   const cleaned = Object.fromEntries(

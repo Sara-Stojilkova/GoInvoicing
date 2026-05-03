@@ -13,7 +13,7 @@ const CheckIcon = () => (
 export function TaskRow({ task, users = [] }: { task: Task; users?: User[] }) {
   const { mutate, isPending } = useCompleteTask(task.agency_id);
   const isDone = task.status === "done";
-  const assignee = users.find(u => u.id === task.assignee_id);
+  const assignee = users.find(u => u.id === task.assigned_to);
 
   return (
     <>
@@ -38,8 +38,8 @@ export function TaskRow({ task, users = [] }: { task: Task; users?: User[] }) {
       </td>
       <td className="task-table__assignee-col">
         {assignee && (
-          <div className="task-row-avatar" data-tooltip={assignee.name}>
-            {assignee.name.charAt(0).toUpperCase()}
+          <div className="task-row-avatar" data-tooltip={assignee.full_name}>
+            {assignee.full_name ?? "".charAt(0).toUpperCase()}
           </div>
         )}
       </td>
