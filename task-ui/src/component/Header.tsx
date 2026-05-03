@@ -1,3 +1,6 @@
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
 const LogoMark = () => (
   <svg width="38" height="38" viewBox="0 0 30 30" fill="none" aria-hidden="true">
     <rect width="30" height="30" rx="8" fill="url(#logo-gradient)" />
@@ -19,16 +22,33 @@ const UserIcon = () => (
 );
 
 export function Header() {
+  const { token, userEmail, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleSignOut() {
+    logout();
+    navigate("/login");
+  }
+
   return (
     <header className="app-header">
       <div className="app-header__logo">
         <LogoMark />
         <span className="app-header__wordmark">Task Management Application</span>
       </div>
-      <button type="button" className="app-header__signin">
-        <UserIcon />
-        Sign in
-      </button>
+      {token ? (
+        <div className="app-header__user">
+          <span className="app-header__email">{userEmail}</span>
+          <button type="button" className="app-header__signout" onClick={handleSignOut}>
+            Sign out
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="app-header__signin" onClick={() => navigate("/login")}>
+          <UserIcon />
+          Sign in
+        </button>
+      )}
     </header>
   );
 }
