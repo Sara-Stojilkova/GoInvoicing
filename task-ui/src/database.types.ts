@@ -72,6 +72,7 @@ export type Database = {
           id: string
           priority: Database["public"]["Enums"]["task_priority"]
           status: Database["public"]["Enums"]["task_status"]
+          tags: string[] | null
           title: string
           updated_at: string
         }
@@ -86,6 +87,7 @@ export type Database = {
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"]
           status?: Database["public"]["Enums"]["task_status"]
+          tags?: string[] | null
           title: string
           updated_at?: string
         }
@@ -100,6 +102,7 @@ export type Database = {
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"]
           status?: Database["public"]["Enums"]["task_status"]
+          tags?: string[] | null
           title?: string
           updated_at?: string
         }
@@ -133,6 +136,7 @@ export type Database = {
           agency_id: string
           created_at: string
           deleted_at: string | null
+          email: string | null
           full_name: string | null
           id: string
         }
@@ -141,6 +145,7 @@ export type Database = {
           agency_id: string
           created_at?: string
           deleted_at?: string | null
+          email?: string | null
           full_name?: string | null
           id: string
         }
@@ -149,6 +154,7 @@ export type Database = {
           agency_id?: string
           created_at?: string
           deleted_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
         }

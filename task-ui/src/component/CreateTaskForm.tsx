@@ -29,7 +29,7 @@ export function CreateTaskForm({ agencyId }: { agencyId: string }) {
         priority,
         agency_id: agencyId,
         description: description || undefined,
-        assignee_id: assigneeId || undefined,
+        assigned_to: assigneeId || undefined,
         due_date: dueDate || undefined,
       },
       {
@@ -98,7 +98,7 @@ export function CreateTaskForm({ agencyId }: { agencyId: string }) {
         >
           <option value="">Unassigned</option>
           {(users ?? []).map((user) => (
-            <option key={user.id} value={user.id}>{user.name}</option>
+            <option key={user.id} value={user.id}>{user.full_name}</option>
           ))}
         </select>
       </div>

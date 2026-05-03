@@ -78,7 +78,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   if (!task) return null;
 
   const agencyName = agency?.name ?? task.agency_id;
-  const assignedUser = users?.find(u => u.id === task.assignee_id);
+  const assignedUser = users?.find(u => u.id === task.assigned_to);
 
   return (
     <div className="task-detail">
@@ -135,14 +135,14 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
                 id="assignee"
                 aria-label="Assignee"
                 className="task-prop__select"
-                value={task.assignee_id ?? ""}
+                value={task.assigned_to ?? ""}
                 onChange={(e) => {
                   assign({ taskId: task.id, assigneeId: e.target.value || null, assigneeAgencyId: agencyId });
                 }}
               >
                 <option value="">Unassigned</option>
                 {users?.map((u) => (
-                  <option key={u.id} value={u.id}>{u.name}</option>
+                  <option key={u.id} value={u.id}>{u.full_name}</option>
                 ))}
               </select>
             </Prop>
@@ -213,7 +213,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
           {assignedUser && (
             <div className="task-detail__assignee-card">
               <div className="task-detail__avatar">
-                {assignedUser.name.charAt(0).toUpperCase()}
+                {assignedUser.full_name ?? "".charAt(0).toUpperCase()}
               </div>
               <p className="task-detail__assignee-email">{assignedUser.email}</p>
             </div>
