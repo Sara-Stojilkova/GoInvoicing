@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,8 +10,11 @@ import (
 	"testing"
 
 	authAPI "backend/api/auth"
+	agencyDomain "backend/internal/domain/agency"
 	"backend/internal/repositories/memory"
 	authServices "backend/internal/services/auth"
+
+	"github.com/google/uuid"
 )
 
 func newHandler(t *testing.T, supabaseURL string) *authAPI.AuthHandler {
@@ -63,6 +67,50 @@ func TestAuthHandlerRegister_NewAgency(t *testing.T) {
 	}
 }
 
+func TestAuthHandlerRegister_ExistingAgency(t *testing.T) {
+	userID := "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
+	server := fakeSupabase(t, userID)
+	defer server.Close()
+
+	agencyRepo := memory.NewAgencyRepo()
+	agencyUUID := uuid.MustParse("ffffffff-ffff-ffff-ffff-ffffffffffff")
+	agencyRepo.Create(context.Background(), &agencyDomain.Agency{ID: agencyUUID, Name: "Existing Co"})
+
+	svc := authServices.NewAuthService(server.URL, "anon-key", "svc-key", agencyRepo, memory.NewUserRepo())
+	h := authAPI.NewAuthHandler(svc)
+
+	body := fmt.Sprintf(`{"full_name":"Bob","email":"bob@example.com","password":"pass","agency_id":%q}`, agencyUUID.String())
+	r := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
+	r.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.Register(w, r)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want 201 (body: %s)", w.Code, w.Body.String())
+	}
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if resp["role"] != "member" {
+		t.Errorf("role: got %v, want member", resp["role"])
+	}
+}
+
+func TestAuthHandlerRegister_AgencyNotFound(t *testing.T) {
+	h := newHandler(t, "http://unused")
+	nonExistent := "dddddddd-dddd-dddd-dddd-dddddddddddd"
+	body := fmt.Sprintf(`{"full_name":"Jane","email":"j@example.com","password":"pass","agency_id":%q}`, nonExistent)
+	r := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
+	r.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.Register(w, r)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("status = %d, want 404", w.Code)
+	}
+}
+
 func TestAuthHandlerRegister_BothAgencyFields(t *testing.T) {
 	h := newHandler(t, "http://unused")
 	body := `{"full_name":"Jane","email":"j@example.com","password":"p","agency_name":"A","agency_id":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"}`
@@ -79,6 +127,20 @@ func TestAuthHandlerRegister_BothAgencyFields(t *testing.T) {
 func TestAuthHandlerRegister_NeitherAgencyField(t *testing.T) {
 	h := newHandler(t, "http://unused")
 	body := `{"full_name":"Jane","email":"j@example.com","password":"p"}`
+	r := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
+	r.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.Register(w, r)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want 400", w.Code)
+	}
+}
+
+func TestAuthHandlerRegister_MissingRequiredFields(t *testing.T) {
+	h := newHandler(t, "http://unused")
+	// agency_name present but email missing
+	body := `{"full_name":"Jane","password":"pass","agency_name":"Acme"}`
 	r := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
 	r.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -142,6 +204,19 @@ func TestAuthHandlerLogin_InvalidCredentials(t *testing.T) {
 
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("status = %d, want 401", w.Code)
+	}
+}
+
+func TestAuthHandlerLogin_MissingFields(t *testing.T) {
+	h := newHandler(t, "http://unused")
+	body := `{"email":"user@example.com"}`
+	r := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
+	r.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.Login(w, r)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want 400", w.Code)
 	}
 }
 

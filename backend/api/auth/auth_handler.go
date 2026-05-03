@@ -36,14 +36,15 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.FullName == "" || req.Email == "" || req.Password == "" {
+		api.WriteError(w, http.StatusBadRequest, "full_name, email, and password are required")
+		return
+	}
+
 	hasAgencyID := req.AgencyID != nil && *req.AgencyID != uuid.Nil
 	hasAgencyName := req.AgencyName != ""
 	if hasAgencyID == hasAgencyName {
 		api.WriteError(w, http.StatusBadRequest, "provide either agency_id or agency_name, not both or neither")
-		return
-	}
-	if req.FullName == "" || req.Email == "" || req.Password == "" {
-		api.WriteError(w, http.StatusBadRequest, "full_name, email, and password are required")
 		return
 	}
 
