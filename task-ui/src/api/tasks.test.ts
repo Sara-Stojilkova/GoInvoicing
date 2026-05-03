@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { listTasks, getTask, createTask, assignTask, completeTask, setTaskInProgress, updateDueDate, updateDescription } from "./tasks";
+import { listTasks, getTask, createTask, assignTask, completeTask, setTaskInProgress, updateDueDate, updateDescription, updateTags } from "./tasks";
 
 const agencyId = "a1b2c3d4-0000-0000-0000-000000000001";
 const taskId = "c3d4e5f6-0000-0000-0000-000000000003";
@@ -14,6 +14,7 @@ const task = {
   created_at: "2024-01-01T00:00:00Z",
   due_date: null,
   completed_at: null,
+  tags: null,
 };
 
 function mockFetch(status: number, body: unknown) {
@@ -348,5 +349,55 @@ describe("setTaskInProgress", () => {
   it("throws ApiError with status 409 when task is already in progress", async () => {
     mockFetch(409, { error: "task already in progress" });
     await expect(setTaskInProgress(taskId)).rejects.toMatchObject({ status: 409 });
+  });
+});
+
+describe("updateTags", () => {
+  it("calls PATCH /api/tasks/:id/tags", async () => {
+    const fetchMock = vi.fn().mockImplementation(() =>
+      new Response(null, { status: 204 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await updateTags(taskId, ["bug", "urgent"]);
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`/api/tasks/${taskId}/tags`);
+    expect(init.method).toBe("PATCH");
+  });
+
+  it("sends tags array in the request body", async () => {
+    const fetchMock = vi.fn().mockImplementation(() =>
+      new Response(null, { status: 204 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await updateTags(taskId, ["bug", "urgent"]);
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(init.body as string)).toEqual({ tags: ["bug", "urgent"] });
+  });
+
+  it("sends empty array to clear tags", async () => {
+    const fetchMock = vi.fn().mockImplementation(() =>
+      new Response(null, { status: 204 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await updateTags(taskId, []);
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(init.body as string)).toEqual({ tags: [] });
+  });
+
+  it("returns void on 204", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => new Response(null, { status: 204 })));
+    const result = await updateTags(taskId, ["bug"]);
+    expect(result).toBeUndefined();
+  });
+
+  it("throws ApiError with status 404 when task not found", async () => {
+    mockFetch(404, { error: "not found" });
+    await expect(updateTags("missing-id", ["bug"])).rejects.toMatchObject({ status: 404 });
   });
 });

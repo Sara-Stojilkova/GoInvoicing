@@ -73,6 +73,7 @@ function mockApis(task: Task = fullTask) {
   vi.spyOn(tasksApi,    "getTask").mockResolvedValue(task);
   vi.spyOn(usersApi,    "listUsers").mockResolvedValue([assigneeUser]);
   vi.spyOn(agenciesApi, "getAgency").mockResolvedValue(agency);
+  vi.spyOn(tasksApi,    "updateTags").mockResolvedValue(undefined);
 }
 
 function renderPage(id = taskId) {
@@ -442,6 +443,25 @@ describe("TaskDetailPage", () => {
       await waitFor(() => screen.getByText("Fix login bug"));
       await userEvent.selectOptions(screen.getByRole("combobox", { name: /change status/i }), "in_progress");
       await waitFor(() => expect(spy).toHaveBeenCalledWith(taskId, expect.any(Object)));
+    });
+  });
+
+  describe("tags", () => {
+    it("renders existing tags as chips", async () => {
+      mockApis({ ...fullTask, tags: ["bug", "urgent"] });
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText("bug")).toBeInTheDocument();
+        expect(screen.getByText("urgent")).toBeInTheDocument();
+      });
+    });
+
+    it("renders the tags input when task has no tags", async () => {
+      mockApis(minimalTask);
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText(/add a tag/i)).toBeInTheDocument();
+      });
     });
   });
 });

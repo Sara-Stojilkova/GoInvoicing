@@ -29,6 +29,7 @@ func (s *TaskService) Create(
 	description *string,
 	assigneeID *uuid.UUID,
 	dueDate *time.Time,
+	tags []string,
 ) (*domain.Task, error) {
 	task := &domain.Task{
 		ID:          uuid.New(),
@@ -39,6 +40,7 @@ func (s *TaskService) Create(
 		Description: description,
 		AssignedTo:  assigneeID,
 		DueDate:     dueDate,
+		Tags:        tags,
 		Status:      "todo",
 		CreatedAt:   time.Now(),
 		CompletedAt: nil,
@@ -146,5 +148,14 @@ func (s *TaskService) SetDueDate(ctx context.Context, taskID uuid.UUID, dueDate 
 		return err
 	}
 	task.SetDueDate(dueDate)
+	return s.repo.Update(ctx, task)
+}
+
+func (s *TaskService) UpdateTags(ctx context.Context, taskID uuid.UUID, tags []string) error {
+	task, err := s.repo.GetByID(ctx, taskID)
+	if err != nil {
+		return err
+	}
+	task.Tags = tags
 	return s.repo.Update(ctx, task)
 }

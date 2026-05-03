@@ -21,6 +21,7 @@ type Task struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	DueDate     *time.Time `json:"due_date"`     // nil = no due date
 	CompletedAt *time.Time `json:"completed_at"` // nil = not complete
+	Tags        []string   `json:"tags"`
 }
 
 func (t Task) IsAssigned() bool {

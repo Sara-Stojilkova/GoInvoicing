@@ -9,13 +9,14 @@ export function getTask(id: string, agencyId: string): Promise<Task> {
   return request<Task>(`/api/tasks/${id}?agency_id=${agencyId}`);
 }
 
-export function createTask(data: { 
-  title: string; 
-  priority: string; 
-  agency_id: string; 
+export function createTask(data: {
+  title: string;
+  priority: string;
+  agency_id: string;
   description?: string;
   assigned_to?: string;
   due_date?: string;
+  tags?: string[];
 }): Promise<Task> {
   const cleaned = Object.fromEntries(
     Object.entries(data).filter(([ , v]) => v != undefined)
@@ -59,5 +60,12 @@ export function updateDueDate(id: string, dueDate: string | null): Promise<void>
   return request<void>(`/api/tasks/${id}/due-date`, {
     method: "PATCH",
     body: JSON.stringify({ due_date: dueDate }),
+  });
+}
+
+export function updateTags(id: string, tags: string[]): Promise<void> {
+  return request<void>(`/api/tasks/${id}/tags`, {
+    method: "PATCH",
+    body: JSON.stringify({ tags }),
   });
 }

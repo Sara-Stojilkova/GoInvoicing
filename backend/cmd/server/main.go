@@ -105,6 +105,7 @@ func main() {
 		r.Post("/{id}/set-in-progress", taskHandler.SetInProgress)
 		r.Patch("/{id}/due-date", taskHandler.UpdateDueDate)
 		r.Patch("/{id}/description", taskHandler.UpdateDescription)
+		r.Patch("/{id}/tags", taskHandler.UpdateTags)
 	})
 
 	r.Route("/api/users", func(r chi.Router) {

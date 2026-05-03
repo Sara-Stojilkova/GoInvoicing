@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useCreateTask } from "../hooks/useTasks";
 import { useUsers } from "../hooks/useUsers";
+import { TagsInput } from "./TagsInput";
 
 export function CreateTaskForm({ agencyId }: { agencyId: string }) {
   const { mutate, isPending, isError, error } = useCreateTask(agencyId);
@@ -11,6 +12,7 @@ export function CreateTaskForm({ agencyId }: { agencyId: string }) {
   const [description, setDescription] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [errors, setErrors] = useState<{ title?: string }>({});
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -31,6 +33,7 @@ export function CreateTaskForm({ agencyId }: { agencyId: string }) {
         description: description || undefined,
         assigned_to: assigneeId || undefined,
         due_date: dueDate || undefined,
+        tags: tags.length > 0 ? tags : undefined,
       },
       {
         onSuccess: () => {
@@ -39,6 +42,7 @@ export function CreateTaskForm({ agencyId }: { agencyId: string }) {
           setDescription("");
           setAssigneeId("");
           setDueDate("");
+          setTags([]);
         },
       }
     );
@@ -113,6 +117,11 @@ export function CreateTaskForm({ agencyId }: { agencyId: string }) {
           onChange={(e) => setDueDate(e.target.value)}
           className="create-form__input"
         />
+      </div>
+
+      <div className="create-form__field">
+        <label className="create-form__label">Tags</label>
+        <TagsInput value={tags} onChange={setTags} />
       </div>
 
       {isError && <p className="create-form__api-error">{error?.message}</p>}
