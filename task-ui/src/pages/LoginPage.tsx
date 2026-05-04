@@ -1,8 +1,20 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { Box, TextField, Button, Typography, Alert } from "@mui/material";
 import { useAuth } from "../context/AuthContext";
 import { ApiError } from "../api/error";
+
+const WatermarkMark = () => (
+  <svg className="auth-watermark" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+    <rect width="120" height="120" rx="28" fill="url(#wm-grad)" />
+    <polyline points="28 60 50 82 92 38" stroke="#fff" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+    <defs>
+      <linearGradient id="wm-grad" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#c084fc" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.15" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -34,49 +46,65 @@ export function LoginPage() {
   }
 
   return (
-    <Box component="main" sx={{ maxWidth: 400, mx: "auto", mt: 8, p: 3 }}>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Sign in
-      </Typography>
-      {registered && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          Account created. Please sign in.
-        </Alert>
-      )}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        noValidate
-        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-      >
-        <TextField
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          autoComplete="email"
-        />
-        <TextField
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          autoComplete="current-password"
-        />
-        <Button type="submit" variant="contained" disabled={loading}>
-          {loading ? "Signing in…" : "Sign in"}
-        </Button>
-      </Box>
-      <Typography sx={{ mt: 2 }}>
-        Don't have an account? <Link to="/register">Register</Link>
-      </Typography>
-    </Box>
+    <main className="auth-page">
+      <div className="auth-panel auth-panel--left" aria-hidden="true">
+        <WatermarkMark />
+        <div className="auth-panel__copy">
+          <p className="auth-tagline">Coordinate work.<br />Ship faster.</p>
+        </div>
+      </div>
+
+      <div className="auth-panel auth-panel--right">
+        <div className="auth-form-wrap">
+          <h1 className="auth-heading">Welcome back</h1>
+          <p className="auth-subheading">Sign in to your workspace</p>
+
+          {registered && (
+            <div className="auth-alert auth-alert--success">
+              Account created — please sign in.
+            </div>
+          )}
+          {error && (
+            <div className="auth-alert auth-alert--error">{error}</div>
+          )}
+
+          <form className="auth-form" onSubmit={handleSubmit} noValidate>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="login-email">Email</label>
+              <input
+                id="login-email"
+                className="auth-input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                autoFocus
+              />
+            </div>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="login-password">Password</label>
+              <input
+                id="login-password"
+                className="auth-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+            </div>
+            <button className="auth-submit" type="submit" disabled={loading}>
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            No account?{" "}
+            <Link to="/register" className="auth-link">Create one</Link>
+          </p>
+        </div>
+      </div>
+    </main>
   );
 }

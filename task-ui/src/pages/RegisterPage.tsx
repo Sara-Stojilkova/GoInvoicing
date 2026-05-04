@@ -1,20 +1,22 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  FormLabel,
-} from "@mui/material";
 import { useAuth } from "../context/AuthContext";
 import { ApiError } from "../api/error";
 
 type AgencyMode = "create" | "join";
+
+const WatermarkMark = () => (
+  <svg className="auth-watermark" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+    <rect width="120" height="120" rx="28" fill="url(#wm-grad-reg)" />
+    <polyline points="28 60 50 82 92 38" stroke="#fff" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+    <defs>
+      <linearGradient id="wm-grad-reg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#c084fc" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.15" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 export function RegisterPage() {
   const { register } = useAuth();
@@ -55,80 +57,114 @@ export function RegisterPage() {
   }
 
   return (
-    <Box component="main" sx={{ maxWidth: 400, mx: "auto", mt: 8, p: 3 }}>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Create account
-      </Typography>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        noValidate
-        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-      >
-        <TextField
-          label="Full name"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          required
-          autoComplete="name"
-        />
-        <TextField
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          autoComplete="email"
-        />
-        <TextField
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          autoComplete="new-password"
-        />
-        <Box>
-          <FormLabel>Agency</FormLabel>
-          <RadioGroup
-            row
-            value={agencyMode}
-            onChange={(e) => setAgencyMode(e.target.value as AgencyMode)}
-          >
-            <FormControlLabel value="create" control={<Radio />} label="Create new" />
-            <FormControlLabel value="join" control={<Radio />} label="Join existing" />
-          </RadioGroup>
-          {agencyMode === "create" ? (
-            <TextField
-              label="Agency name"
-              value={agencyName}
-              onChange={(e) => setAgencyName(e.target.value)}
-              required
-              fullWidth
-            />
-          ) : (
-            <TextField
-              label="Agency ID"
-              value={agencyId}
-              onChange={(e) => setAgencyId(e.target.value)}
-              required
-              fullWidth
-              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-            />
+    <main className="auth-page">
+      <div className="auth-panel auth-panel--left" aria-hidden="true">
+        <WatermarkMark />
+        <div className="auth-panel__copy">
+          <p className="auth-tagline">Your agency.<br />Your workflow.</p>
+        </div>
+      </div>
+
+      <div className="auth-panel auth-panel--right">
+        <div className="auth-form-wrap">
+          <h1 className="auth-heading">Create account</h1>
+          <p className="auth-subheading">Get your team up and running</p>
+
+          {error && (
+            <div className="auth-alert auth-alert--error">{error}</div>
           )}
-        </Box>
-        <Button type="submit" variant="contained" disabled={loading}>
-          {loading ? "Creating account…" : "Create account"}
-        </Button>
-      </Box>
-      <Typography sx={{ mt: 2 }}>
-        Already have an account? <Link to="/login">Sign in</Link>
-      </Typography>
-    </Box>
+
+          <form className="auth-form" onSubmit={handleSubmit} noValidate>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="reg-name">Full name</label>
+              <input
+                id="reg-name"
+                className="auth-input"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                autoComplete="name"
+                autoFocus
+              />
+            </div>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="reg-email">Email</label>
+              <input
+                id="reg-email"
+                className="auth-input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+            </div>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="reg-password">Password</label>
+              <input
+                id="reg-password"
+                className="auth-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+              />
+            </div>
+
+            <div className="auth-field">
+              <span className="auth-label">Agency</span>
+              <div className="auth-segment" role="group" aria-label="Agency option">
+                <button
+                  type="button"
+                  className={`auth-segment__btn${agencyMode === "create" ? " auth-segment__btn--active" : ""}`}
+                  onClick={() => setAgencyMode("create")}
+                >
+                  Create new
+                </button>
+                <button
+                  type="button"
+                  className={`auth-segment__btn${agencyMode === "join" ? " auth-segment__btn--active" : ""}`}
+                  onClick={() => setAgencyMode("join")}
+                >
+                  Join existing
+                </button>
+              </div>
+              {agencyMode === "create" ? (
+                <input
+                  className="auth-input"
+                  type="text"
+                  value={agencyName}
+                  onChange={(e) => setAgencyName(e.target.value)}
+                  required
+                  placeholder="Agency name"
+                  aria-label="Agency name"
+                />
+              ) : (
+                <input
+                  className="auth-input"
+                  type="text"
+                  value={agencyId}
+                  onChange={(e) => setAgencyId(e.target.value)}
+                  required
+                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  aria-label="Agency ID"
+                />
+              )}
+            </div>
+
+            <button className="auth-submit" type="submit" disabled={loading}>
+              {loading ? "Creating account…" : "Create account"}
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            Already have an account?{" "}
+            <Link to="/login" className="auth-link">Sign in</Link>
+          </p>
+        </div>
+      </div>
+    </main>
   );
 }
