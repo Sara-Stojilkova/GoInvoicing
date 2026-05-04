@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"backend/internal/apperrors"
 	domain "backend/internal/domain/agency"
 	"backend/internal/repositories"
 
@@ -65,4 +66,20 @@ func (r *agencyRepo) List(ctx context.Context) ([]*domain.Agency, error) {
 		agencies = append(agencies, &a)
 	}
 	return agencies, rows.Err()
+}
+
+func (r *agencyRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	tag, err := r.db.Exec(ctx, `
+		update agencies
+		set deleted_at = now()
+		where id = $1 and deleted_at is null`,
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("delete agency %s: %w", id, mapErr(err))
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("agency %s: %w", id, apperrors.ErrNotFound)
+	}
+	return nil
 }

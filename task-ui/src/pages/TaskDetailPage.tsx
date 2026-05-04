@@ -24,6 +24,12 @@ function Prop({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
+const ChevronLeftIcon = () => (
+  <svg className="back-link__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+
 // Icons
 const CalendarIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -67,7 +73,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
   if (isError) {
     return (
       <Box role="alert" sx={{ p: 4 }}>
-        <Link to="/" className="back-link">Back to list</Link>
+        <Link to="/" className="back-link"><ChevronLeftIcon />Tasks</Link>
         <Typography sx={{ fontWeight: 600, mt: 2 }}>
           {(error as { status?: number })?.status === 404
             ? "Task not found."
@@ -84,10 +90,11 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
 
   return (
     <div className="task-detail">
-      <Link to="/" className="back-link">Back to list</Link>
-
       <header className="task-detail__header">
-        <h1>{task.title}</h1>
+        <div className="task-detail__header-top">
+          <Link to="/" className="back-link"><ChevronLeftIcon />Tasks</Link>
+          <h1>{task.title}</h1>
+        </div>
         <div className="task-detail__header-badges">
           <StatusBadge status={task.status} />
           <PriorityBadge priority={task.priority} />
@@ -222,7 +229,7 @@ export function TaskDetailPage({ agencyId }: { agencyId: string }) {
           {assignedUser && (
             <div className="task-detail__assignee-card">
               <div className="task-detail__avatar">
-                {assignedUser.full_name ?? "".charAt(0).toUpperCase()}
+                {(assignedUser.full_name || assignedUser.email || "?").charAt(0).toUpperCase()}
               </div>
               <p className="task-detail__assignee-email">{assignedUser.email}</p>
             </div>

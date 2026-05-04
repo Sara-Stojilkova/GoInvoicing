@@ -5,5 +5,6 @@ export function useUsers(agencyId: string) {
   return useQuery({
     queryKey: ["users", agencyId],
     queryFn: () => listUsers(agencyId),
+    enabled: !!agencyId,
   });
 }

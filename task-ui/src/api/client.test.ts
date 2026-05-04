@@ -11,6 +11,7 @@ function makeFetchResponse(status: number, body: unknown): Response {
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  localStorage.clear();
 });
 
 describe("request", () => {
@@ -70,5 +71,44 @@ describe("request", () => {
     await request("/users?agency_id=1");
 
     expect(fetchMock.mock.calls[0][0]).toBe("/users?agency_id=1");
+  });
+
+  it("attaches Authorization header when auth_token is in localStorage", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse(200, {}));
+    vi.stubGlobal("fetch", fetchMock);
+    localStorage.setItem("auth_token", "my-token");
+
+    await request("/tasks");
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect((init.headers as Record<string, string>)["Authorization"]).toBe("Bearer my-token");
+  });
+
+  it("does not attach Authorization header when no token in localStorage", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse(200, {}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await request("/tasks");
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect((init.headers as Record<string, string>)["Authorization"]).toBeUndefined();
+  });
+
+  it("dispatches auth:logout event on 401", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeFetchResponse(401, { error: "unauthorized" })));
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+
+    await expect(request("/tasks")).rejects.toMatchObject({ status: 401 });
+
+    expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({ type: "auth:logout" }));
+  });
+
+  it("does not dispatch auth:logout on non-401 errors", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeFetchResponse(403, { error: "forbidden" })));
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+
+    await expect(request("/tasks")).rejects.toMatchObject({ status: 403 });
+
+    expect(dispatchSpy).not.toHaveBeenCalledWith(expect.objectContaining({ type: "auth:logout" }));
   });
 });

@@ -27,6 +27,7 @@ func (r *userRepo) Create(ctx context.Context, user *domain.User) error {
 		user.ID,
 		user.AgencyID,
 		user.FullName,
+		user.Email,
 	)
 	if err != nil {
 		return fmt.Errorf("create user: %w", mapErr(err))
@@ -36,12 +37,12 @@ func (r *userRepo) Create(ctx context.Context, user *domain.User) error {
 
 func (r *userRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	row := r.db.QueryRow(ctx, `
-		select id, agency_id, full_name, email, created_at
+		select id, agency_id, coalesce(full_name, ''), coalesce(email, ''), activated, created_at
 		from users
 		where id = $1 and deleted_at is null`, id)
 
 	var u domain.User
-	if err := row.Scan(&u.ID, &u.AgencyID, &u.FullName, &u.Email, &u.CreatedAt); err != nil {
+	if err := row.Scan(&u.ID, &u.AgencyID, &u.FullName, &u.Email, &u.Activated, &u.CreatedAt); err != nil {
 		return nil, fmt.Errorf("user %s: %w", id, mapErr(err))
 	}
 	return &u, nil
@@ -49,9 +50,9 @@ func (r *userRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, err
 
 func (r *userRepo) List(ctx context.Context) ([]*domain.User, error) {
 	rows, err := r.db.Query(ctx, `
-		select id, agency_id, full_name, email, created_at
+		select id, agency_id, coalesce(full_name, ''), coalesce(email, ''), activated, created_at
 		from users
-		where deleted_at is null
+		where deleted_at is null and agency_id is not null
 		order by created_at desc`)
 	if err != nil {
 		return nil, fmt.Errorf("list users: %w", err)
@@ -61,7 +62,7 @@ func (r *userRepo) List(ctx context.Context) ([]*domain.User, error) {
 	var users []*domain.User
 	for rows.Next() {
 		var u domain.User
-		if err := rows.Scan(&u.ID, &u.AgencyID, &u.FullName, &u.Email, &u.CreatedAt); err != nil {
+		if err := rows.Scan(&u.ID, &u.AgencyID, &u.FullName, &u.Email, &u.Activated, &u.CreatedAt); err != nil {
 			return nil, fmt.Errorf("list users scan: %w", err)
 		}
 		users = append(users, &u)
@@ -82,6 +83,22 @@ func (r *userRepo) Update(ctx context.Context, user *domain.User) error {
 	}
 	if tag.RowsAffected() == 0 {
 		return fmt.Errorf("user %s: %w", user.ID, apperrors.ErrNotFound)
+	}
+	return nil
+}
+
+func (r *userRepo) UpdateSignupFields(ctx context.Context, id uuid.UUID, agencyID uuid.UUID, email string, activated bool) error {
+	tag, err := r.db.Exec(ctx, `
+		update users
+		set agency_id = $1, email = $2, activated = $3
+		where id = $4 and deleted_at is null`,
+		agencyID, email, activated, id,
+	)
+	if err != nil {
+		return fmt.Errorf("update signup fields for user %s: %w", id, mapErr(err))
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("user %s: %w", id, apperrors.ErrNotFound)
 	}
 	return nil
 }

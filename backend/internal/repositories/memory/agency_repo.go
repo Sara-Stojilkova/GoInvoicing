@@ -47,3 +47,13 @@ func (r *agencyRepo) List(ctx context.Context) ([]*domain.Agency, error) {
 	}
 	return result, nil
 }
+
+func (r *agencyRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, ok := r.agencies[id]; !ok {
+		return fmt.Errorf("agency %s: %w", id, apperrors.ErrNotFound)
+	}
+	delete(r.agencies, id)
+	return nil
+}
