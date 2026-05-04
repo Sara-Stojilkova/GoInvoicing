@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useTasks } from "../hooks/useTasks";
 import { useUsers } from "../hooks/useUsers";
+import { useTasksRealtime } from "../hooks/useTasksRealtime";
 import { TaskRow } from "../component/TaskRow";
 import { SummaryCards } from "../component/SummaryCards";
 import type { StatusFilter } from "../component/SummaryCards";
@@ -10,6 +11,7 @@ import { CreateTaskForm } from "../component/CreateTaskForm";
 export function TaskListPage({ agencyId }: { agencyId: string }) {
   const { data: tasks, isLoading, isError, error, refetch } = useTasks(agencyId);
   const { data: users = [] } = useUsers(agencyId);
+  useTasksRealtime(agencyId);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const visible = useMemo(
