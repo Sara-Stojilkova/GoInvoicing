@@ -6,12 +6,15 @@ import (
 	"crypto/elliptic"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"log"
 	"math/big"
 	"net/http"
 	"strings"
 
 	"backend/api"
+	"backend/internal/apperrors"
+	"backend/internal/repositories"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -77,6 +80,30 @@ func fetchECKeys(supabaseURL string) map[string]*ecdsa.PublicKey {
 	}
 	log.Printf("middleware: loaded %d EC key(s) from Supabase JWKS", len(keys))
 	return keys
+}
+
+// RequireActivated rejects requests from users whose activated flag is false.
+// Must run after Authenticate (depends on ContextUserID being set).
+func RequireActivated(userRepo repositories.UserRepository) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userID, _ := r.Context().Value(ContextUserID).(uuid.UUID)
+			user, err := userRepo.GetByID(r.Context(), userID)
+			if err != nil {
+				if errors.Is(err, apperrors.ErrNotFound) {
+					api.WriteError(w, http.StatusForbidden, "account not found")
+				} else {
+					api.WriteError(w, http.StatusInternalServerError, "failed to verify account status")
+				}
+				return
+			}
+			if !user.Activated {
+				api.WriteError(w, http.StatusForbidden, "account not activated")
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // Authenticate validates JWTs and injects userID, agencyID, and role into the

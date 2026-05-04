@@ -117,9 +117,10 @@ func main() {
 		r.Post("/login", authHandler.Login)
 	})
 
-	// Protected routes — JWT required
+	// Protected routes — JWT required + account must be activated
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware.Authenticate(jwtSecret, supabaseURL))
+		r.Use(authMiddleware.RequireActivated(userRepo))
 
 		r.Route("/api/invoices", func(r chi.Router) {
 			r.Get("/", invoiceHandler.List)
