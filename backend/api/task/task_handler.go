@@ -9,6 +9,7 @@ import (
 	"backend/api"
 	"backend/internal/apperrors"
 	domain "backend/internal/domain/task"
+	authMiddleware "backend/internal/middleware"
 	services "backend/internal/services/task"
 
 	"github.com/go-chi/chi/v5"
@@ -45,7 +46,6 @@ type createTaskRequest struct {
 	Title       string     `json:"title"`
 	Priority    string     `json:"priority"`
 	AgencyID    uuid.UUID  `json:"agency_id"`
-	CreatedBy   uuid.UUID  `json:"created_by"`
 	Description *string    `json:"description,omitempty"`
 	AssignedTo  *uuid.UUID `json:"assigned_to,omitempty"`
 	DueDate     *time.Time `json:"due_date,omitempty"`
@@ -67,11 +67,8 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		api.WriteError(w, http.StatusBadRequest, "agency_id is required")
 		return
 	}
-	if req.CreatedBy == uuid.Nil {
-		api.WriteError(w, http.StatusBadRequest, "created_by is required")
-		return
-	}
-	task, err := h.svc.Create(r.Context(), req.Title, req.Priority, req.AgencyID, req.CreatedBy, req.Description, req.AssignedTo, req.DueDate, req.Tags)
+	createdBy, _ := r.Context().Value(authMiddleware.ContextUserID).(uuid.UUID)
+	task, err := h.svc.Create(r.Context(), req.Title, req.Priority, req.AgencyID, createdBy, req.Description, req.AssignedTo, req.DueDate, req.Tags)
 	if err != nil {
 		api.WriteError(w, http.StatusInternalServerError, "failed to create task")
 		return

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	domain "backend/internal/domain/task"
+	authMiddleware "backend/internal/middleware"
 	"backend/internal/repositories/memory"
 	services "backend/internal/services/task"
 
@@ -119,7 +120,7 @@ func TestTaskHandlerList(t *testing.T) {
 func TestTaskHandlerCreate(t *testing.T) {
 	agencyID := uuid.New()
 	userID := uuid.New()
-	validBody := fmt.Sprintf(`{"title":"Fix bug","priority":"high","agency_id":%q,"created_by":%q}`, agencyID, userID)
+	validBody := fmt.Sprintf(`{"title":"Fix bug","priority":"high","agency_id":%q}`, agencyID)
 
 	tests := []struct {
 		name       string
@@ -128,10 +129,9 @@ func TestTaskHandlerCreate(t *testing.T) {
 	}{
 		{"valid request", validBody, http.StatusCreated},
 		{"malformed json", `{bad json}`, http.StatusBadRequest},
-		{"missing title", fmt.Sprintf(`{"priority":"high","agency_id":%q,"created_by":%q}`, agencyID, userID), http.StatusBadRequest},
-		{"missing priority", fmt.Sprintf(`{"title":"Fix bug","agency_id":%q,"created_by":%q}`, agencyID, userID), http.StatusBadRequest},
-		{"missing agency_id", fmt.Sprintf(`{"title":"Fix bug","priority":"high","created_by":%q}`, userID), http.StatusBadRequest},
-		{"missing created_by", fmt.Sprintf(`{"title":"Fix bug","priority":"high","agency_id":%q}`, agencyID), http.StatusBadRequest},
+		{"missing title", fmt.Sprintf(`{"priority":"high","agency_id":%q}`, agencyID), http.StatusBadRequest},
+		{"missing priority", fmt.Sprintf(`{"title":"Fix bug","agency_id":%q}`, agencyID), http.StatusBadRequest},
+		{"missing agency_id", `{"title":"Fix bug","priority":"high"}`, http.StatusBadRequest},
 		{"invalid agency_id uuid", `{"title":"Fix bug","priority":"high","agency_id":"bad"}`, http.StatusBadRequest},
 	}
 
@@ -141,6 +141,8 @@ func TestTaskHandlerCreate(t *testing.T) {
 
 			r := httptest.NewRequest(http.MethodPost, "/api/tasks", strings.NewReader(tt.body))
 			r.Header.Set("Content-Type", "application/json")
+			ctx := context.WithValue(r.Context(), authMiddleware.ContextUserID, userID)
+			r = r.WithContext(ctx)
 			w := httptest.NewRecorder()
 			h.Create(w, r)
 
