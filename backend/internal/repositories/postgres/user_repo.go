@@ -37,7 +37,7 @@ func (r *userRepo) Create(ctx context.Context, user *domain.User) error {
 
 func (r *userRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	row := r.db.QueryRow(ctx, `
-		select id, agency_id, full_name, email, activated, created_at
+		select id, agency_id, coalesce(full_name, ''), coalesce(email, ''), activated, created_at
 		from users
 		where id = $1 and deleted_at is null`, id)
 
@@ -50,9 +50,9 @@ func (r *userRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, err
 
 func (r *userRepo) List(ctx context.Context) ([]*domain.User, error) {
 	rows, err := r.db.Query(ctx, `
-		select id, agency_id, full_name, email, activated, created_at
+		select id, agency_id, coalesce(full_name, ''), coalesce(email, ''), activated, created_at
 		from users
-		where deleted_at is null
+		where deleted_at is null and agency_id is not null
 		order by created_at desc`)
 	if err != nil {
 		return nil, fmt.Errorf("list users: %w", err)
@@ -87,12 +87,12 @@ func (r *userRepo) Update(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
-func (r *userRepo) UpdateSignupFields(ctx context.Context, id uuid.UUID, email string, activated bool) error {
+func (r *userRepo) UpdateSignupFields(ctx context.Context, id uuid.UUID, agencyID uuid.UUID, email string, activated bool) error {
 	tag, err := r.db.Exec(ctx, `
 		update users
-		set email = $1, activated = $2
-		where id = $3 and deleted_at is null`,
-		email, activated, id,
+		set agency_id = $1, email = $2, activated = $3
+		where id = $4 and deleted_at is null`,
+		agencyID, email, activated, id,
 	)
 	if err != nil {
 		return fmt.Errorf("update signup fields for user %s: %w", id, mapErr(err))

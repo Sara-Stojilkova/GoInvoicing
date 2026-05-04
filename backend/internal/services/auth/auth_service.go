@@ -176,8 +176,8 @@ func (s *AuthService) Register(ctx context.Context, req RegisterRequest) (*Regis
 		return nil, fmt.Errorf("register: set app_metadata: %w", err)
 	}
 
-	// Update public.users with email and, for new-agency admins, activated=true.
-	if err := s.userRepo.UpdateSignupFields(ctx, userID, req.Email, newAgency); err != nil {
+	// Update public.users with agency_id, email, and activated=true for new-agency admins.
+	if err := s.userRepo.UpdateSignupFields(ctx, userID, agencyID, req.Email, newAgency); err != nil {
 		log.Printf("register cleanup: UpdateSignupFields failed for user %s: %v", userID, err)
 		if delErr := s.supabaseDeleteUser(ctx, signupResp.userID()); delErr != nil {
 			log.Printf("register cleanup: delete auth user %s: %v", signupResp.userID(), delErr)
