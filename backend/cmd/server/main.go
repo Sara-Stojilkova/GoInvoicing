@@ -111,6 +111,13 @@ func main() {
 	r.Use(chiMiddleware.Recoverer)
 	r.Use(cors(allowedOrigin()))
 
+	// Health check — no auth required
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	})
+
 	// Public routes — no JWT required
 	r.Route("/api/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.Register)
