@@ -1,0 +1,72 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    name: Build and push Docker images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/goinvoicing-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/goinvoicing-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push task-ui
+        uses: docker/build-push-action@v5
+        with:
+          context: ./task-ui
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/goinvoicing-task-ui:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/goinvoicing-task-ui:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: self-hosted
+    needs: build-and-push
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update image tags to git SHA
+        run: |
+          sed -i "s|/goinvoicing-backend:latest|/goinvoicing-backend:${{ github.sha }}|g" k8s/backend/deployment.yml
+          sed -i "s|/goinvoicing-task-ui:latest|/goinvoicing-task-ui:${{ github.sha }}|g" k8s/task-ui/deployment.yml
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/namespace.yml
+          kubectl apply -f k8s/postgres/
+          kubectl apply -f k8s/backend/
+          kubectl apply -f k8s/task-ui/
+
+      - name: Wait for rollouts to complete
+        run: |
+          kubectl rollout status deployment/backend -n goinvoicing --timeout=120s
+          kubectl rollout status deployment/task-ui -n goinvoicing --timeout=120s
