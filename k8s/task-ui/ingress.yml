@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: task-ui-ingress
+  namespace: goinvoicing
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: app.goinvoicing.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: task-ui
+                port:
+                  number: 80

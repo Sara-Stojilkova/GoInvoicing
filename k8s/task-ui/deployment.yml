@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-ui
+  namespace: goinvoicing
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: task-ui
+  template:
+    metadata:
+      labels:
+        app: task-ui
+    spec:
+      containers:
+        - name: task-ui
+          image: sarastojilkova/goinvoicing-task-ui:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: BACKEND_URL
+              value: http://backend:8080
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 30
