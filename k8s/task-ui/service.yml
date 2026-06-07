@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: task-ui
+  namespace: goinvoicing
+spec:
+  selector:
+    app: task-ui
+  ports:
+    - port: 80
+      targetPort: 80

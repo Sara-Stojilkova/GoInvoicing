@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: goinvoicing
+data:
+  SUPABASE_URL: https://mshugzgwjnyyjdkyjwgn.supabase.co
+  CORS_ORIGIN: http://app.goinvoicing.local

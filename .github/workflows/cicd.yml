@@ -59,6 +59,16 @@ jobs:
           sed -i "s|/goinvoicing-backend:latest|/goinvoicing-backend:${{ github.sha }}|g" k8s/backend/deployment.yml
           sed -i "s|/goinvoicing-task-ui:latest|/goinvoicing-task-ui:${{ github.sha }}|g" k8s/task-ui/deployment.yml
 
+      - name: Create backend secret
+        run: |
+          kubectl create secret generic backend-secret \
+            --namespace=goinvoicing \
+            --from-literal=DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            --from-literal=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
+            --from-literal=SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            --from-literal=SUPABASE_JWT_SECRET="${{ secrets.SUPABASE_JWT_SECRET }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Apply Kubernetes manifests
         run: |
           kubectl apply -f k8s/namespace.yml
