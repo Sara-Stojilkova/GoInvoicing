@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -49,10 +49,12 @@ jobs:
     name: Deploy to Kubernetes
     runs-on: self-hosted
     needs: build-and-push
+    env:
+      RUNNER_PROCESS_KILL_ORPHANS: false
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
         with:
           persist-credentials: false
 
