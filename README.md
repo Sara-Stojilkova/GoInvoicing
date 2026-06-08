@@ -1,6 +1,6 @@
 # GoInvoicing
 
-A task and invoice management application with a Go backend, React frontend, and Supabase (Postgres) as the database.
+A task and invoice management application with a Go backend, React frontend, and PostgreSQL database. Fully containerized with Docker, orchestrated with Docker Compose, and deployable to Kubernetes.
 
 ## Repository layout
 
@@ -13,17 +13,29 @@ backend/          Go API server (domain-driven design)
     repositories/ Repository interfaces + implementations (memory/, postgres/)
     apperrors/    Shared sentinel errors (ErrNotFound, ErrConflict, …)
   api/            HTTP handlers and response helpers
-  supabase/       Supabase CLI config and migrations
+  Dockerfile      Multi-stage build: golang:1.25-alpine → alpine:3.21
 
 task-ui/          React + Vite frontend for task management
-invoice-ui/       React frontend for invoice views
+  Dockerfile      Multi-stage build: node:20-alpine → nginx:1.27-alpine
+  nginx.conf.template  SPA routing + /api proxy (BACKEND_URL substituted at runtime)
+
+k8s/              Kubernetes manifests (namespace: goinvoicing)
+  namespace.yml
+  postgres/       StatefulSet, Service, ConfigMap, Secret
+  backend/        Deployment, Service, Ingress, ConfigMap, Secret
+  task-ui/        Deployment, Service, Ingress
+
+docker-compose.yml  Local 3-service orchestration (postgres, backend, task-ui)
+.github/workflows/cicd.yml  GitHub Actions CI/CD pipeline
 ```
 
 ## Prerequisites
 
-- Go 1.18+
-- Node.js 18+ and npm
-- [Supabase CLI](https://supabase.com/docs/guides/cli) (`brew install supabase/tap/supabase` or see docs)
+- Go 1.25+
+- Node.js 20+ and npm
+- Docker and Docker Compose
+- [Supabase CLI](https://supabase.com/docs/guides/cli) (for migrations)
+- kubectl + minikube (for Kubernetes deployment)
 
 ## Getting started
 
